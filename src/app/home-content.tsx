@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect, useState } from 'react';
-import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { Package, User, LogOut, AlertCircle } from 'lucide-react';
+import { Package, AlertCircle, LogIn } from 'lucide-react';
 import { Button } from '@/components/ui';
 import { ProductCard } from '@/components/product-card';
+import { ProfileModal } from '@/components/profile-modal';
 import { PRODUCTS } from '@/lib/products';
 import { User as UserType, UserProduct } from '@/types';
 import { getDaysRemaining } from '@/lib/utils';
@@ -16,6 +16,7 @@ export default function HomeContent() {
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState<UserType | null>(null);
   const [userProducts, setUserProducts] = useState<UserProduct[]>([]);
+  const [showProfile, setShowProfile] = useState(false);
 
   const errorParam = searchParams.get('error');
   const productParam = searchParams.get('product');
@@ -62,6 +63,11 @@ export default function HomeContent() {
     setIsLoggedIn(false);
     setUser(null);
     setUserProducts([]);
+    setShowProfile(false);
+  };
+
+  const handleLogin = () => {
+    window.location.href = '/api/auth/google';
   };
 
   const isProductOwned = (productId: string) => {
@@ -92,31 +98,38 @@ export default function HomeContent() {
           </div>
           <nav className="flex items-center gap-3">
             {!isLoading && (
-              isLoggedIn ? (
-                <div className="flex items-center gap-4">
+              isLoggedIn && user ? (
+                <button
+                  onClick={() => setShowProfile(true)}
+                  className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-800 transition-colors"
+                >
                   <span className="text-sm text-slate-400">
-                    Olá, <span className="text-white">{user?.name}</span>
+                    Olá, <span className="text-white font-medium">{user.name}</span>
                   </span>
-                  <Button variant="ghost" size="sm" onClick={handleLogout}>
-                    <LogOut className="w-4 h-4" /> Sair
-                  </Button>
-                </div>
+                  <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
+                    <span className="text-sm font-bold text-white">
+                      {user.name?.charAt(0).toUpperCase() || 'U'}
+                    </span>
+                  </div>
+                </button>
               ) : (
-                <>
-                  <Link href="/login">
-                    <Button variant="ghost" size="sm">Entrar</Button>
-                  </Link>
-                  <Link href="/register">
-                    <Button variant="primary" size="sm">
-                      <User className="w-4 h-4" /> Criar Conta
-                    </Button>
-                  </Link>
-                </>
+                <Button variant="primary" size="sm" onClick={handleLogin}>
+                  <LogIn className="w-4 h-4" /> Entrar com Google
+                </Button>
               )
             )}
           </nav>
         </div>
       </header>
+
+      {showProfile && user && (
+        <ProfileModal
+          user={user}
+          products={userProducts}
+          onClose={() => setShowProfile(false)}
+          onLogout={handleLogout}
+        />
+      )}
 
       <main className="max-w-5xl mx-auto px-6 py-10">
         {errorParam === 'no_access' && productParam && (

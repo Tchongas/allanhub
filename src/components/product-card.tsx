@@ -128,9 +128,9 @@ export function ProductCard({
               ) : (
                 <div className="flex items-center gap-3">
                   <span className="text-sm text-slate-400">Faça login para ativar seu código</span>
-                  <a href="/login">
-                    <Button variant="primary">Entrar</Button>
-                  </a>
+                  <Button variant="primary" onClick={() => window.location.href = '/api/auth/google'}>
+                    Entrar com Google
+                  </Button>
                 </div>
               )}
             </div>
