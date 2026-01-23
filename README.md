@@ -4,7 +4,7 @@ Portal central para gerenciamento de acesso a múltiplos produtos.
 
 ## Funcionalidades
 
-- 🔐 **Autenticação**: Login/registro com Supabase Auth
+- 🔐 **Autenticação**: Login com Google OAuth (Supabase Auth)
 - 🎫 **Códigos de Ativação**: Usuários inserem códigos para liberar produtos
 - 📦 **Catálogo de Produtos**: Visualização de produtos disponíveis
 - 🔗 **Redirecionamento JWT**: Acesso seguro aos produtos via token
@@ -50,6 +50,7 @@ cp .env.local.example .env.local
 Preencha:
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `NEXT_PUBLIC_SITE_URL` (URL do Hub, ex: http://localhost:3001)
 - `SUPABASE_SERVICE_ROLE_KEY`
 - `JWT_SECRET` (mesmo secret usado nos produtos)
 - `FESTA_MAGICA_URL` (URL do Festa Mágica)
@@ -104,8 +105,8 @@ src/
 
 | Endpoint | Método | Descrição |
 |----------|--------|-----------|
-| `/api/auth/login` | POST | Login |
-| `/api/auth/register` | POST | Registro |
+| `/api/auth/google` | GET | Iniciar login com Google |
+| `/api/auth/callback` | GET | Callback do OAuth |
 | `/api/auth/verify` | GET | Verificar sessão |
 | `/api/auth/logout` | POST | Logout |
 | `/api/products/activate` | POST | Ativar código |
