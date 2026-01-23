@@ -8,7 +8,7 @@ export const PRODUCTS: Product[] = [
     iconName: 'party-popper',
     image: '/images/festa-magica.jpg',
     color: 'blue',
-    url: process.env.FESTA_MAGICA_URL || 'http://localhost:3000',
+    url: process.env.FESTA_MAGICA_URL || 'https://festa-magica-two.vercel.app',
     price: 49.90,
     duration_months: 3,
     features: [
