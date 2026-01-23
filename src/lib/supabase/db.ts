@@ -1,0 +1,147 @@
+import { createServiceRoleClient } from './server';
+import { User, UserProduct, ActivationCode } from '@/types';
+
+export async function getUserById(userId: string): Promise<User | null> {
+  const supabase = createServiceRoleClient();
+  
+  const { data, error } = await supabase
+    .from('hub_users')
+    .select('*')
+    .eq('id', userId)
+    .single();
+
+  if (error || !data) return null;
+  return data as User;
+}
+
+export async function getUserByEmail(email: string): Promise<User | null> {
+  const supabase = createServiceRoleClient();
+  
+  const { data, error } = await supabase
+    .from('hub_users')
+    .select('*')
+    .eq('email', email)
+    .single();
+
+  if (error || !data) return null;
+  return data as User;
+}
+
+export async function createUser(email: string, name: string): Promise<User> {
+  const supabase = createServiceRoleClient();
+  
+  const { data, error } = await supabase
+    .from('hub_users')
+    .insert({ email, name })
+    .select()
+    .single();
+
+  if (error) throw new Error(`Failed to create user: ${error.message}`);
+  return data as User;
+}
+
+export async function getUserProducts(userId: string): Promise<UserProduct[]> {
+  const supabase = createServiceRoleClient();
+  
+  const { data, error } = await supabase
+    .from('user_products')
+    .select('*')
+    .eq('user_id', userId)
+    .order('activated_at', { ascending: false });
+
+  if (error) return [];
+  return data as UserProduct[];
+}
+
+export async function getActiveUserProduct(userId: string, productId: string): Promise<UserProduct | null> {
+  const supabase = createServiceRoleClient();
+  
+  const { data, error } = await supabase
+    .from('user_products')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('product_id', productId)
+    .eq('status', 'active')
+    .gt('expires_at', new Date().toISOString())
+    .single();
+
+  if (error || !data) return null;
+  return data as UserProduct;
+}
+
+export async function validateActivationCode(code: string): Promise<ActivationCode | null> {
+  const supabase = createServiceRoleClient();
+  
+  const { data, error } = await supabase
+    .from('activation_codes')
+    .select('*')
+    .eq('code', code)
+    .eq('used', false)
+    .single();
+
+  if (error || !data) return null;
+  
+  if (data.expires_at && new Date(data.expires_at) < new Date()) {
+    return null;
+  }
+  
+  return data as ActivationCode;
+}
+
+export async function activateProduct(
+  userId: string,
+  code: string,
+  productId: string,
+  durationMonths: number = 3
+): Promise<UserProduct> {
+  const supabase = createServiceRoleClient();
+  
+  const activatedAt = new Date();
+  const expiresAt = new Date();
+  expiresAt.setMonth(expiresAt.getMonth() + durationMonths);
+
+  const { data: userProduct, error: productError } = await supabase
+    .from('user_products')
+    .insert({
+      user_id: userId,
+      product_id: productId,
+      status: 'active',
+      activated_at: activatedAt.toISOString(),
+      expires_at: expiresAt.toISOString(),
+      activation_code: code,
+    })
+    .select()
+    .single();
+
+  if (productError) throw new Error(`Failed to activate product: ${productError.message}`);
+
+  await supabase
+    .from('activation_codes')
+    .update({
+      used: true,
+      used_by: userId,
+      used_at: new Date().toISOString(),
+    })
+    .eq('code', code);
+
+  return userProduct as UserProduct;
+}
+
+export async function generateActivationCode(productId: string): Promise<string> {
+  const supabase = createServiceRoleClient();
+  
+  const prefix = productId.substring(0, 2).toUpperCase();
+  const timestamp = Date.now().toString(36).toUpperCase().slice(-4);
+  const random = Math.random().toString(36).toUpperCase().slice(2, 6);
+  const code = `${prefix}-${timestamp}-${random}-${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`;
+
+  await supabase
+    .from('activation_codes')
+    .insert({
+      code,
+      product_id: productId,
+      used: false,
+    });
+
+  return code;
+}
