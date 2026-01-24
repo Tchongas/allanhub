@@ -1,7 +1,7 @@
 import { SignJWT, JWTPayload } from 'jose';
 
 const JWT_SECRET = new TextEncoder().encode(
-  process.env.JWT_SECRET || 'your-secret-key-min-32-characters-long'
+  process.env.SUPABASE_JWT_SECRET || 'your-secret-key-min-32-characters-long'
 );
 
 export interface ProductTokenPayload {
