@@ -92,9 +92,8 @@ export default function HomeContent() {
         <div className="max-w-5xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="bg-blue-600 p-2 rounded-lg">
-              <Package className="w-5 h-5 text-white" />
             </div>
-            <span className="text-xl font-semibold text-white">Hub</span>
+            <span className="text-xl font-semibold text-white"></span>
           </div>
           <nav className="flex items-center gap-3">
             {!isLoading && (
