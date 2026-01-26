@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
 
     if (!activationCode) {
       return NextResponse.json(
-        { error: 'Código inválido ou já utilizado' },
+        { error: 'Código inválido ou expirado' },
         { status: 400 }
       );
     }

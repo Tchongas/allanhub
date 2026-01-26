@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { PartyPopper, Rocket, Sparkles, Check, ExternalLink, Loader2, Clock } from 'lucide-react';
 import { Button, Input, Badge } from '@/components/ui';
 import { Product } from '@/types';
-import { formatCurrency } from '@/lib/utils';
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   'party-popper': PartyPopper,
@@ -75,10 +74,6 @@ export function ProductCard({
             <div>
               <h3 className="text-xl font-semibold text-white mb-2">{product.name}</h3>
               <p className="text-slate-400 text-sm leading-relaxed">{product.description}</p>
-            </div>
-            <div className="text-right flex-shrink-0">
-              <div className="text-2xl font-bold text-white">{formatCurrency(product.price)}</div>
-              <div className="text-sm text-slate-500">por {product.duration_months} meses</div>
             </div>
           </div>
 

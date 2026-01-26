@@ -76,7 +76,6 @@ export async function validateActivationCode(code: string): Promise<ActivationCo
     .from('activation_codes')
     .select('*')
     .eq('code', code)
-    .eq('used', false)
     .single();
 
   if (error || !data) return null;
@@ -114,15 +113,6 @@ export async function activateProduct(
     .single();
 
   if (productError) throw new Error(`Failed to activate product: ${productError.message}`);
-
-  await supabase
-    .from('activation_codes')
-    .update({
-      used: true,
-      used_by: userId,
-      used_at: new Date().toISOString(),
-    })
-    .eq('code', code);
 
   return userProduct as UserProduct;
 }

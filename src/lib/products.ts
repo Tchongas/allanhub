@@ -15,7 +15,6 @@ export const PRODUCTS: Product[] = [
       'Geração ilimitada de kits',
       'Download em alta qualidade',
       'Estilos 2D e 3D',
-      'Suporte por email',
     ],
     active: true,
   },
