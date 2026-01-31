@@ -10,14 +10,17 @@ export interface Product {
   id: string;
   name: string;
   description: string;
-  iconName: string;
+  icon_name: string;
   image: string;
   color: string;
   url: string;
   price: number;
   duration_months: number;
+  is_lifetime: boolean;
   features: string[];
   active: boolean;
+  created_at?: Date;
+  updated_at?: Date;
 }
 
 export interface UserProduct {

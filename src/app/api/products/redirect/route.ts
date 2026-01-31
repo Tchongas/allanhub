@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(new URL('/login', request.url));
     }
 
-    const product = getProduct(productId);
+    const product = await getProduct(productId);
     if (!product) {
       return NextResponse.json(
         { error: 'Produto não encontrado' },

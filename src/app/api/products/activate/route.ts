@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const product = getProduct(activationCode.product_id);
+    const product = await getProduct(activationCode.product_id);
     if (!product) {
       return NextResponse.json(
         { error: 'Produto não encontrado' },
@@ -56,7 +56,8 @@ export async function POST(request: NextRequest) {
       user.id,
       code,
       activationCode.product_id,
-      product.duration_months
+      product.duration_months,
+      product.is_lifetime
     );
 
     return NextResponse.json({

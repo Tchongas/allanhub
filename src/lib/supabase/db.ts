@@ -91,13 +91,22 @@ export async function activateProduct(
   userId: string,
   code: string,
   productId: string,
-  durationMonths: number = 3
+  durationMonths: number = 3,
+  isLifetime: boolean = false
 ): Promise<UserProduct> {
   const supabase = createServiceRoleClient();
   
   const activatedAt = new Date();
-  const expiresAt = new Date();
-  expiresAt.setMonth(expiresAt.getMonth() + durationMonths);
+  let expiresAt: Date;
+  
+  if (isLifetime) {
+    // Set expiration to 100 years from now for lifetime purchases
+    expiresAt = new Date();
+    expiresAt.setFullYear(expiresAt.getFullYear() + 100);
+  } else {
+    expiresAt = new Date();
+    expiresAt.setMonth(expiresAt.getMonth() + durationMonths);
+  }
 
   const { data: userProduct, error: productError } = await supabase
     .from('user_products')
@@ -108,6 +117,7 @@ export async function activateProduct(
       activated_at: activatedAt.toISOString(),
       expires_at: expiresAt.toISOString(),
       activation_code: code,
+      is_lifetime: isLifetime,
     })
     .select()
     .single();

@@ -112,35 +112,75 @@ src/
 | `/api/products/activate` | POST | Ativar código |
 | `/api/products/redirect` | GET | Redirecionar para produto |
 
+## Painel Admin
+
+Admins podem gerenciar produtos diretamente pelo painel web.
+
+### Configurar Admins
+
+Edite `src/lib/admin.ts` e adicione os emails dos administradores:
+
+```typescript
+const ADMIN_EMAILS: string[] = [
+  'seu-email@gmail.com',
+  'outro-admin@gmail.com',
+];
+```
+
+### Acessar Painel Admin
+
+1. Faça login com um email de admin
+2. Clique no botão "Admin" no header
+3. Gerencie produtos (criar, editar, excluir)
+
+### Funcionalidades do Admin
+
+- ✅ Criar novos produtos
+- ✅ Editar produtos existentes
+- ✅ Ativar/desativar produtos
+- ✅ Configurar acesso vitalício
+- ✅ Gerenciar recursos/features
+
 ## Adicionando Novos Produtos
 
-1. Edite `src/lib/products.ts`:
-```typescript
-{
-  id: 'novo-produto',
-  name: 'Novo Produto',
-  description: 'Descrição',
-  icon: '🎯',
-  color: 'blue',
-  url: process.env.NOVO_PRODUTO_URL || 'http://localhost:3002',
-  price: 39.90,
-  duration_months: 3,
-  features: ['Feature 1', 'Feature 2'],
-  active: true,
-}
-```
+### Via Painel Admin (Recomendado)
 
-2. Adicione a URL no `.env.local`:
-```
-NOVO_PRODUTO_URL=http://localhost:3002
-```
+1. Acesse `/admin` com uma conta de admin
+2. Clique em "Novo Produto"
+3. Preencha os campos e salve
 
-3. Gere códigos de ativação:
+### Via SQL (Alternativo)
+
 ```sql
-SELECT * FROM generate_activation_codes('novo-produto', 10);
+INSERT INTO products (id, name, description, icon_name, url, duration_months, is_lifetime, features, active)
+VALUES (
+  'novo-produto',
+  'Novo Produto',
+  'Descrição do produto',
+  'sparkles',
+  'https://seu-produto.vercel.app',
+  3,
+  FALSE,
+  '["Feature 1", "Feature 2"]'::jsonb,
+  TRUE
+);
 ```
 
-4. Configure o produto para aceitar JWT do Hub (mesmo `JWT_SECRET`)
+## Acesso Vitalício
+
+Produtos podem ser configurados como vitalícios:
+
+- No painel admin, marque "Acesso Vitalício"
+- Usuários com acesso vitalício não têm data de expiração
+- Exibido como "∞ Vitalício" na interface
+
+## Gerando Códigos de Ativação
+
+```sql
+SELECT * FROM generate_activation_codes('produto-id', 10);
+```
+
+**Nota**: Os códigos são reutilizáveis por padrão (múltiplos usuários podem usar o mesmo código).
 
 ## Licença
 
