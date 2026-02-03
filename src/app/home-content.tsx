@@ -195,20 +195,6 @@ export default function HomeContent() {
           ))}
         </div>
       </main>
-
-      <footer className="border-t border-slate-800/50 py-10 px-6 mt-20">
-        <div className="max-w-5xl mx-auto text-center">
-          <div className="flex items-center justify-center gap-2 mb-3">
-            <div className="bg-gradient-to-br from-blue-500 to-violet-600 p-1.5 rounded-lg">
-              <Sparkles className="w-4 h-4 text-white" />
-            </div>
-            <span className="font-semibold text-slate-400">Hub</span>
-          </div>
-          <p className="text-sm text-slate-500">
-            © 2024 Hub. Todos os direitos reservados.
-          </p>
-        </div>
-      </footer>
     </div>
   );
 }

@@ -174,14 +174,3 @@ Produtos podem ser configurados como vitalícios:
 - Usuários com acesso vitalício não têm data de expiração
 - Exibido como "∞ Vitalício" na interface
 
-## Gerando Códigos de Ativação
-
-```sql
-SELECT * FROM generate_activation_codes('produto-id', 10);
-```
-
-**Nota**: Os códigos são reutilizáveis por padrão (múltiplos usuários podem usar o mesmo código).
-
-## Licença
-
-Projeto privado - Todos os direitos reservados.
