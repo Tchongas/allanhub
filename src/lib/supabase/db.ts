@@ -145,3 +145,28 @@ export async function generateActivationCode(productId: string): Promise<string>
 
   return code;
 }
+
+export async function getActivationCodesForProduct(productId: string, limit: number = 5): Promise<ActivationCode[]> {
+  const supabase = createServiceRoleClient();
+  
+  const { data, error } = await supabase
+    .from('activation_codes')
+    .select('*')
+    .eq('product_id', productId)
+    .order('created_at', { ascending: false })
+    .limit(limit);
+
+  if (error || !data) return [];
+  return data as ActivationCode[];
+}
+
+export async function generateMultipleActivationCodes(productId: string, count: number = 5): Promise<string[]> {
+  const codes: string[] = [];
+  
+  for (let i = 0; i < count; i++) {
+    const code = await generateActivationCode(productId);
+    codes.push(code);
+  }
+  
+  return codes;
+}

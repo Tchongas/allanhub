@@ -12,10 +12,16 @@ import {
   Loader2,
   Package,
   Infinity,
-  Clock
+  Clock,
+  Key,
+  Copy,
+  RefreshCw,
+  ChevronDown,
+  ChevronUp,
+  Check
 } from 'lucide-react';
 import { Button, Input, Badge } from '@/components/ui';
-import { Product } from '@/types';
+import { Product, ActivationCode } from '@/types';
 
 export default function AdminPage() {
   const router = useRouter();
@@ -27,6 +33,10 @@ export default function AdminPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [productCodes, setProductCodes] = useState<Record<string, ActivationCode[]>>({});
+  const [expandedCodes, setExpandedCodes] = useState<Record<string, boolean>>({});
+  const [generatingCodes, setGeneratingCodes] = useState<string | null>(null);
+  const [copiedCode, setCopiedCode] = useState<string | null>(null);
 
   const emptyProduct: Omit<Product, 'created_at' | 'updated_at'> = {
     id: '',
@@ -73,9 +83,54 @@ export default function AdminPage() {
       const res = await fetch('/api/admin/products');
       const data = await res.json();
       setProducts(data.products || []);
+      
+      // Load codes for each product
+      for (const product of data.products || []) {
+        await loadCodesForProduct(product.id);
+      }
     } catch (err) {
       setError('Erro ao carregar produtos');
     }
+  }
+
+  async function loadCodesForProduct(productId: string) {
+    try {
+      const res = await fetch(`/api/admin/codes?productId=${productId}`);
+      const data = await res.json();
+      setProductCodes(prev => ({ ...prev, [productId]: data.codes || [] }));
+    } catch (err) {
+      console.error('Error loading codes:', err);
+    }
+  }
+
+  async function generateCodes(productId: string) {
+    setGeneratingCodes(productId);
+    try {
+      const res = await fetch('/api/admin/codes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ productId, count: 5 }),
+      });
+      
+      if (res.ok) {
+        await loadCodesForProduct(productId);
+        setSuccess('Códigos gerados com sucesso!');
+      }
+    } catch (err) {
+      setError('Erro ao gerar códigos');
+    } finally {
+      setGeneratingCodes(null);
+    }
+  }
+
+  function toggleCodes(productId: string) {
+    setExpandedCodes(prev => ({ ...prev, [productId]: !prev[productId] }));
+  }
+
+  async function copyCode(code: string) {
+    await navigator.clipboard.writeText(code);
+    setCopiedCode(code);
+    setTimeout(() => setCopiedCode(null), 2000);
   }
 
   function startEdit(product: Product) {
@@ -380,8 +435,67 @@ export default function AdminPage() {
                     )}
                     <span>{product.features.length} recursos</span>
                   </div>
+
+                  {/* Activation Codes Section */}
+                  <div className="mt-4 pt-4 border-t border-slate-700/50">
+                    <button
+                      onClick={() => toggleCodes(product.id)}
+                      className="flex items-center gap-2 text-sm text-slate-400 hover:text-white transition-colors"
+                    >
+                      <Key className="w-4 h-4" />
+                      <span>Códigos de Ativação ({productCodes[product.id]?.length || 0})</span>
+                      {expandedCodes[product.id] ? (
+                        <ChevronUp className="w-4 h-4" />
+                      ) : (
+                        <ChevronDown className="w-4 h-4" />
+                      )}
+                    </button>
+
+                    {expandedCodes[product.id] && (
+                      <div className="mt-3 space-y-2">
+                        {productCodes[product.id]?.length > 0 ? (
+                          productCodes[product.id].map((code) => (
+                            <div
+                              key={code.code}
+                              className="flex items-center justify-between bg-slate-900/50 rounded-lg px-3 py-2"
+                            >
+                              <code className="text-sm font-mono text-emerald-400">{code.code}</code>
+                              <button
+                                onClick={() => copyCode(code.code)}
+                                className="text-slate-400 hover:text-white transition-colors p-1"
+                                title="Copiar código"
+                              >
+                                {copiedCode === code.code ? (
+                                  <Check className="w-4 h-4 text-emerald-400" />
+                                ) : (
+                                  <Copy className="w-4 h-4" />
+                                )}
+                              </button>
+                            </div>
+                          ))
+                        ) : (
+                          <p className="text-sm text-slate-500">Nenhum código gerado ainda.</p>
+                        )}
+
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => generateCodes(product.id)}
+                          disabled={generatingCodes === product.id}
+                          className="mt-2"
+                        >
+                          {generatingCodes === product.id ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <RefreshCw className="w-4 h-4" />
+                          )}
+                          Gerar 5 Novos Códigos
+                        </Button>
+                      </div>
+                    )}
+                  </div>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-2 self-start">
                   <Button variant="ghost" size="icon" onClick={() => startEdit(product)}>
                     <Pencil className="w-4 h-4" />
                   </Button>
