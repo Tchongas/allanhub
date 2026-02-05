@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS products (
   image TEXT DEFAULT '',
   color TEXT DEFAULT 'blue',
   url TEXT NOT NULL,
+  shop_link TEXT DEFAULT '',
   price DECIMAL(10, 2) DEFAULT 0,
   duration_months INTEGER DEFAULT 3,
   is_lifetime BOOLEAN DEFAULT FALSE,
@@ -15,6 +16,9 @@ CREATE TABLE IF NOT EXISTS products (
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- Add shop_link column if it doesn't exist (for existing tables)
+ALTER TABLE products ADD COLUMN IF NOT EXISTS shop_link TEXT DEFAULT '';
 
 -- Add is_lifetime column to user_products if it doesn't exist
 ALTER TABLE user_products 

@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from 'react';
-import { PartyPopper, Rocket, Sparkles, Check, ExternalLink, Loader2, Clock, Infinity, LogIn } from 'lucide-react';
+import { PartyPopper, Rocket, Sparkles, Check, ExternalLink, Loader2, Clock, Infinity, LogIn, ShoppingCart } from 'lucide-react';
+import Image from 'next/image';
 import { Button, Input, Badge } from '@/components/ui';
 import { Product } from '@/types';
 
@@ -56,17 +57,30 @@ export function ProductCard({
   return (
     <div className="group bg-slate-800/40 border border-slate-700/50 rounded-2xl overflow-hidden hover:border-slate-600/50 transition-all duration-300 hover:shadow-xl hover:shadow-blue-500/5">
       <div className="flex flex-col lg:flex-row">
-        <div className="lg:w-72 h-44 lg:h-auto bg-gradient-to-br from-slate-800 to-slate-900 flex items-center justify-center relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-600/10 via-violet-600/10 to-transparent" />
-          <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-gradient-to-br from-blue-500/20 to-violet-500/20" />
-          <IconComponent className="w-16 h-16 text-slate-500 group-hover:text-slate-400 transition-colors duration-300 relative z-10" />
+        <div className="lg:w-72 h-44 lg:h-auto min-h-[176px] bg-gradient-to-br from-slate-800 to-slate-900 flex items-center justify-center relative overflow-hidden">
+          {product.image ? (
+            <>
+              <img
+                src={product.image}
+                alt={product.name}
+                className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 to-transparent" />
+            </>
+          ) : (
+            <>
+              <div className="absolute inset-0 bg-gradient-to-br from-blue-600/10 via-violet-600/10 to-transparent" />
+              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-gradient-to-br from-blue-500/20 to-violet-500/20" />
+              <IconComponent className="w-16 h-16 text-slate-500 group-hover:text-slate-400 transition-colors duration-300 relative z-10" />
+            </>
+          )}
           {!product.active && (
-            <div className="absolute top-4 left-4">
+            <div className="absolute top-4 left-4 z-20">
               <Badge variant="secondary">Em breve</Badge>
             </div>
           )}
           {isOwned && (
-            <div className="absolute top-4 left-4">
+            <div className="absolute top-4 left-4 z-20">
               <Badge variant="success" className="shadow-lg shadow-emerald-500/20">Ativo</Badge>
             </div>
           )}
@@ -131,6 +145,13 @@ export function ProductCard({
                     >
                       {isActivating ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Ativar'}
                     </Button>
+                    {product.shop_link && (
+                      <a href={product.shop_link} target="_blank" rel="noopener noreferrer">
+                        <Button variant="outline" className="whitespace-nowrap">
+                          <ShoppingCart className="w-4 h-4" /> Comprar
+                        </Button>
+                      </a>
+                    )}
                   </div>
                   {error && <p className="text-sm text-red-400">{error}</p>}
                   {success && <p className="text-sm text-emerald-400">Produto ativado com sucesso!</p>}

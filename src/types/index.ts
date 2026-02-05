@@ -14,6 +14,7 @@ export interface Product {
   image: string;
   color: string;
   url: string;
+  shop_link?: string;
   price: number;
   duration_months: number;
   is_lifetime: boolean;

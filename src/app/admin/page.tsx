@@ -46,6 +46,7 @@ export default function AdminPage() {
     image: '',
     color: 'blue',
     url: '',
+    shop_link: '',
     price: 0,
     duration_months: 3,
     is_lifetime: false,
@@ -300,18 +301,40 @@ export default function AdminPage() {
               />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               <div>
-                <label className="block text-sm font-medium text-slate-400 mb-1">URL do Produto</label>
+                <label className="block text-sm font-medium text-slate-400 mb-1">URL do Produto (acesso)</label>
                 <Input
                   value={formData.url}
                   onChange={(e) => setFormData({ ...formData, url: e.target.value })}
-                  placeholder="https://..."
+                  placeholder="https://app.exemplo.com"
                   className="bg-slate-900/50 border-slate-600 text-white"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-400 mb-1">Ícone</label>
+                <label className="block text-sm font-medium text-slate-400 mb-1">Link da Loja (compra)</label>
+                <Input
+                  value={formData.shop_link || ''}
+                  onChange={(e) => setFormData({ ...formData, shop_link: e.target.value })}
+                  placeholder="https://loja.exemplo.com/produto"
+                  className="bg-slate-900/50 border-slate-600 text-white"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-400 mb-1">URL da Imagem</label>
+                <Input
+                  value={formData.image}
+                  onChange={(e) => setFormData({ ...formData, image: e.target.value })}
+                  placeholder="https://exemplo.com/imagem.jpg"
+                  className="bg-slate-900/50 border-slate-600 text-white"
+                />
+                <p className="text-xs text-slate-500 mt-1">Deixe vazio para usar o ícone</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-400 mb-1">Ícone (fallback)</label>
                 <select
                   value={formData.icon_name}
                   onChange={(e) => setFormData({ ...formData, icon_name: e.target.value })}
