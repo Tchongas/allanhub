@@ -51,7 +51,7 @@ export function ProductIntroModal({ productName, html, onClose }: ProductIntroMo
         </div>
 
         {/* Scrollable content area */}
-        <div className="flex-1 overflow-y-auto overscroll-contain">
+        <div className="flex-1 overflow-y-auto overscroll-contain modal-scroll">
           <div
             ref={contentRef}
             className="product-modal-content px-6 py-6"
