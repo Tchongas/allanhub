@@ -86,6 +86,13 @@ export default function AdminPage() {
   <li>Comece a usar todas as funcionalidades</li>
 </ul>
 
+<h3>Como usar (sem os numeros)</h3>
+<ul>
+  <li>Clique no botão abaixo para acessar o produto</li>
+  <li>Faça login com a mesma conta do Hub</li>
+  <li>Comece a usar todas as funcionalidades</li>
+</ul>
+
 <div class="video-container">
   <iframe 
     src="https://www.youtube.com/embed/dQw4w9WgXcQ" 
