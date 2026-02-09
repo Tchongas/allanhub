@@ -12,6 +12,7 @@ const FALLBACK_PRODUCTS: Product[] = [
     color: 'blue',
     url: process.env.FESTA_MAGICA_URL || 'https://festa-magica-two.vercel.app',
     shop_link: '',
+    modal_html: '',
     price: 49.90,
     duration_months: 3,
     is_lifetime: false,

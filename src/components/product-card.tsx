@@ -2,9 +2,9 @@
 
 import { useState } from 'react';
 import { PartyPopper, Rocket, Sparkles, Check, ExternalLink, Loader2, Clock, Infinity, LogIn, ShoppingCart } from 'lucide-react';
-import Image from 'next/image';
 import { Button, Input, Badge } from '@/components/ui';
 import { Product } from '@/types';
+import { ProductIntroModal } from '@/components/product-intro-modal';
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   'party-popper': PartyPopper,
@@ -33,6 +33,7 @@ export function ProductCard({
   const [isActivating, setIsActivating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [showIntroModal, setShowIntroModal] = useState(false);
 
   const IconComponent = iconMap[product.icon_name] || Sparkles;
 
@@ -120,22 +121,32 @@ export function ProductCard({
                   </>
                 )}
               </div>
-              <a href={`/api/products/redirect?product=${product.id}`} className="ml-auto">
-                <Button variant="primary" className="shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 transition-shadow">
+              {product.modal_html ? (
+                <Button
+                  variant="primary"
+                  className="ml-auto shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 transition-shadow"
+                  onClick={() => setShowIntroModal(true)}
+                >
                   Acessar Produto <ExternalLink className="w-4 h-4" />
                 </Button>
-              </a>
+              ) : (
+                <a href={`/api/products/redirect?product=${product.id}`} className="ml-auto">
+                  <Button variant="primary" className="shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 transition-shadow">
+                    Acessar Produto <ExternalLink className="w-4 h-4" />
+                  </Button>
+                </a>
+              )}
             </div>
           ) : product.active ? (
             <div className="space-y-3">
               {isLoggedIn ? (
                 <>
-                  <div className="flex gap-3">
+                  <div className="flex flex-wrap gap-3">
                     <Input
                       placeholder="Código de ativação"
                       value={activationCode}
                       onChange={(e) => setActivationCode(e.target.value.toUpperCase())}
-                      className="font-mono bg-slate-900/50 border-slate-600 text-white placeholder:text-slate-500"
+                      className="font-mono bg-slate-900/50 border-slate-600 text-white placeholder:text-slate-500 flex-1 min-w-[180px]"
                     />
                     <Button
                       variant="primary"
@@ -159,9 +170,18 @@ export function ProductCard({
               ) : (
                 <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
                   <span className="text-sm text-slate-400">Faça login para ativar seu código</span>
-                  <Button variant="primary" onClick={() => window.location.href = '/api/auth/google'} className="shadow-lg shadow-blue-500/25">
-                    <LogIn className="w-4 h-4" /> Entrar com Google
-                  </Button>
+                  <div className="flex gap-3">
+                    <Button variant="primary" onClick={() => window.location.href = '/api/auth/google'} className="shadow-lg shadow-blue-500/25">
+                      <LogIn className="w-4 h-4" /> Entrar com Google
+                    </Button>
+                    {product.shop_link && (
+                      <a href={product.shop_link} target="_blank" rel="noopener noreferrer">
+                        <Button variant="outline" className="whitespace-nowrap">
+                          <ShoppingCart className="w-4 h-4" /> Comprar
+                        </Button>
+                      </a>
+                    )}
+                  </div>
                 </div>
               )}
             </div>
@@ -172,6 +192,14 @@ export function ProductCard({
           )}
         </div>
       </div>
+
+      {showIntroModal && product.modal_html && (
+        <ProductIntroModal
+          productName={product.name}
+          html={product.modal_html}
+          onClose={() => setShowIntroModal(false)}
+        />
+      )}
     </div>
   );
 }

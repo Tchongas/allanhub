@@ -15,6 +15,7 @@ export interface Product {
   color: string;
   url: string;
   shop_link?: string;
+  modal_html?: string;
   price: number;
   duration_months: number;
   is_lifetime: boolean;

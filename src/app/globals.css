@@ -22,3 +22,224 @@ body {
   color: var(--foreground);
   font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
+
+/* Product Intro Modal - base styles for admin HTML content */
+.product-modal-content {
+  color: #e2e8f0;
+  font-size: 0.9375rem;
+  line-height: 1.7;
+}
+
+.product-modal-content h1,
+.product-modal-content h2,
+.product-modal-content h3,
+.product-modal-content h4 {
+  color: #ffffff;
+  font-weight: 600;
+  margin-top: 1.25rem;
+  margin-bottom: 0.5rem;
+  line-height: 1.3;
+}
+
+.product-modal-content h1 { font-size: 1.5rem; }
+.product-modal-content h2 { font-size: 1.25rem; }
+.product-modal-content h3 { font-size: 1.1rem; }
+
+.product-modal-content p {
+  margin-bottom: 0.75rem;
+  color: #cbd5e1;
+}
+
+.product-modal-content a {
+  color: #60a5fa;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  transition: color 0.15s;
+}
+
+.product-modal-content a:hover {
+  color: #93bbfc;
+}
+
+.product-modal-content ul,
+.product-modal-content ol {
+  margin: 0.75rem 0;
+  padding-left: 1.5rem;
+}
+
+.product-modal-content li {
+  margin-bottom: 0.35rem;
+  color: #cbd5e1;
+}
+
+.product-modal-content ul li { list-style-type: disc; }
+.product-modal-content ol li { list-style-type: decimal; }
+
+.product-modal-content img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 0.75rem;
+  margin: 1rem 0;
+}
+
+.product-modal-content strong,
+.product-modal-content b {
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.product-modal-content em,
+.product-modal-content i {
+  color: #94a3b8;
+}
+
+.product-modal-content hr {
+  border: none;
+  border-top: 1px solid #334155;
+  margin: 1.25rem 0;
+}
+
+.product-modal-content blockquote {
+  border-left: 3px solid #3b82f6;
+  padding: 0.5rem 1rem;
+  margin: 1rem 0;
+  background: rgba(59, 130, 246, 0.08);
+  border-radius: 0 0.5rem 0.5rem 0;
+  color: #94a3b8;
+}
+
+.product-modal-content code {
+  background: rgba(30, 41, 59, 0.8);
+  padding: 0.15rem 0.4rem;
+  border-radius: 0.25rem;
+  font-size: 0.85em;
+  color: #a5b4fc;
+}
+
+.product-modal-content pre {
+  background: rgba(15, 23, 42, 0.8);
+  padding: 1rem;
+  border-radius: 0.5rem;
+  overflow-x: auto;
+  margin: 1rem 0;
+}
+
+.product-modal-content pre code {
+  background: none;
+  padding: 0;
+}
+
+/* CTA button style for admin use inside modal */
+.product-modal-content .btn-primary,
+.product-modal-content a.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: #3b82f6;
+  color: #ffffff;
+  font-weight: 600;
+  font-size: 0.9375rem;
+  border-radius: 0.75rem;
+  text-decoration: none;
+  transition: all 0.2s;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(59, 130, 246, 0.3);
+  margin-top: 0.5rem;
+}
+
+.product-modal-content .btn-primary:hover,
+.product-modal-content a.btn-primary:hover {
+  background: #2563eb;
+  box-shadow: 0 4px 20px rgba(59, 130, 246, 0.45);
+  color: #ffffff;
+}
+
+.product-modal-content .btn-outline,
+.product-modal-content a.btn-outline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1.25rem;
+  background: transparent;
+  color: #94a3b8;
+  font-weight: 500;
+  font-size: 0.875rem;
+  border-radius: 0.75rem;
+  text-decoration: none;
+  transition: all 0.2s;
+  border: 1px solid #475569;
+  cursor: pointer;
+}
+
+.product-modal-content .btn-outline:hover,
+.product-modal-content a.btn-outline:hover {
+  background: rgba(71, 85, 105, 0.3);
+  color: #e2e8f0;
+  border-color: #64748b;
+}
+
+/* Alert/info boxes for admin use */
+.product-modal-content .info-box {
+  background: rgba(59, 130, 246, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.25);
+  border-radius: 0.75rem;
+  padding: 1rem 1.25rem;
+  margin: 1rem 0;
+  color: #93c5fd;
+  font-size: 0.875rem;
+}
+
+.product-modal-content .warning-box {
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  border-radius: 0.75rem;
+  padding: 1rem 1.25rem;
+  margin: 1rem 0;
+  color: #fcd34d;
+  font-size: 0.875rem;
+}
+
+.product-modal-content .success-box {
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  border-radius: 0.75rem;
+  padding: 1rem 1.25rem;
+  margin: 1rem 0;
+  color: #6ee7b7;
+  font-size: 0.875rem;
+}
+
+/* Steps list for admin use */
+.product-modal-content .steps {
+  counter-reset: step;
+  list-style: none;
+  padding-left: 0;
+}
+
+.product-modal-content .steps li {
+  counter-increment: step;
+  position: relative;
+  padding-left: 2.5rem;
+  margin-bottom: 1rem;
+}
+
+.product-modal-content .steps li::before {
+  content: counter(step);
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1.75rem;
+  height: 1.75rem;
+  background: rgba(59, 130, 246, 0.15);
+  color: #60a5fa;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  font-weight: 600;
+}

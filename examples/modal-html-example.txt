@@ -1,0 +1,39 @@
+<h2>Bem-vindo ao Festa Mágica! 🎉</h2>
+
+<p>Estamos muito felizes em ter você aqui! Antes de acessar o produto, leia as instruções abaixo para aproveitar ao máximo.</p>
+
+<div class="info-box">
+  <strong>💡 Dica:</strong> Salve o link do produto nos seus favoritos para acesso rápido no futuro.
+</div>
+
+<h3>Como funciona</h3>
+<ul class="steps">
+  <li>Clique no botão <strong>"Acessar Produto"</strong> abaixo</li>
+  <li>Você será autenticado automaticamente com sua conta do Hub</li>
+  <li>Escolha o tema da festa e faça upload da foto</li>
+  <li>Baixe seus kits personalizados em alta qualidade</li>
+</ul>
+
+<h3>O que você pode criar</h3>
+<ul>
+  <li><strong>Convites personalizados</strong> — com foto e tema da criança</li>
+  <li><strong>Kits de festa completos</strong> — rótulos, tags, toppers e mais</li>
+  <li><strong>Estilos 2D e 3D</strong> — gerados por inteligência artificial</li>
+</ul>
+
+<div class="warning-box">
+  <strong>⚠️ Atenção:</strong> Não compartilhe seu link de acesso com outras pessoas. Cada conta é individual e intransferível.
+</div>
+
+<div class="success-box">
+  <strong>✅ Seu acesso está ativo!</strong> Você pode usar o produto quantas vezes quiser durante o período da sua assinatura.
+</div>
+
+<hr>
+
+<p style="text-align: center;">
+  <a href="/api/products/redirect?product=festa-magica" class="btn-primary">🚀 Acessar Produto</a>
+</p>
+<p style="text-align: center; margin-top: 0.75rem;">
+  <a href="https://docs.exemplo.com" target="_blank" class="btn-outline">📖 Ver documentação</a>
+</p>

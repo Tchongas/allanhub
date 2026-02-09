@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS products (
   color TEXT DEFAULT 'blue',
   url TEXT NOT NULL,
   shop_link TEXT DEFAULT '',
+  modal_html TEXT DEFAULT '',
   price DECIMAL(10, 2) DEFAULT 0,
   duration_months INTEGER DEFAULT 3,
   is_lifetime BOOLEAN DEFAULT FALSE,
@@ -17,8 +18,9 @@ CREATE TABLE IF NOT EXISTS products (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Add shop_link column if it doesn't exist (for existing tables)
+-- Add columns if they don't exist (for existing tables)
 ALTER TABLE products ADD COLUMN IF NOT EXISTS shop_link TEXT DEFAULT '';
+ALTER TABLE products ADD COLUMN IF NOT EXISTS modal_html TEXT DEFAULT '';
 
 -- Add is_lifetime column to user_products if it doesn't exist
 ALTER TABLE user_products 
@@ -35,7 +37,7 @@ SELECT
   'Festa Mágica',
   'Crie convites e kits de festa infantil personalizados com inteligência artificial. Transforme fotos em artes únicas para aniversários.',
   'party-popper',
-  '/images/festa-magica.jpg',
+  '',
   'blue',
   'https://festa-magica-two.vercel.app',
   49.90,

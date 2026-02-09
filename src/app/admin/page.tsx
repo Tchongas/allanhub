@@ -18,10 +18,38 @@ import {
   RefreshCw,
   ChevronDown,
   ChevronUp,
-  Check
+  Check,
+  Code,
+  Eye,
+  EyeOff,
+  FileCode,
+  Users,
+  Search,
+  Mail,
+  Calendar,
+  ShieldCheck
 } from 'lucide-react';
 import { Button, Input, Badge } from '@/components/ui';
 import { Product, ActivationCode } from '@/types';
+
+interface AdminUserProduct {
+  id: string;
+  product_id: string;
+  product_name: string;
+  status: string;
+  activated_at: string;
+  expires_at: string;
+  activation_code: string;
+  is_lifetime?: boolean;
+}
+
+interface AdminUser {
+  id: string;
+  email: string;
+  name: string;
+  created_at: string;
+  products: AdminUserProduct[];
+}
 
 export default function AdminPage() {
   const router = useRouter();
@@ -37,6 +65,39 @@ export default function AdminPage() {
   const [expandedCodes, setExpandedCodes] = useState<Record<string, boolean>>({});
   const [generatingCodes, setGeneratingCodes] = useState<string | null>(null);
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'products' | 'users'>('products');
+  const [allUsers, setAllUsers] = useState<AdminUser[]>([]);
+  const [usersLoading, setUsersLoading] = useState(false);
+  const [userSearch, setUserSearch] = useState('');
+  const [expandedUsers, setExpandedUsers] = useState<Record<string, boolean>>({});
+
+  const EXAMPLE_MODAL_HTML = `<h2>Bem-vindo ao Produto!</h2>
+
+<p>Antes de acessar, aqui estão algumas informações importantes:</p>
+
+<div class="info-box">
+  <strong>Dica:</strong> Salve o link do produto nos seus favoritos para acesso rápido.
+</div>
+
+<h3>Como usar</h3>
+<ul class="steps">
+  <li>Clique no botão abaixo para acessar o produto</li>
+  <li>Faça login com a mesma conta do Hub</li>
+  <li>Comece a usar todas as funcionalidades</li>
+</ul>
+
+<div class="warning-box">
+  <strong>Atenção:</strong> Não compartilhe seu link de acesso com outras pessoas.
+</div>
+
+<hr>
+
+<p style="text-align: center;">
+  <a href="/api/products/redirect?product=SEU_PRODUTO_ID" class="btn-primary">Acessar Produto →</a>
+</p>
+<p style="text-align: center; margin-top: 0.5rem;">
+  <a href="#" class="btn-outline">Ver documentação</a>
+</p>`;
 
   const emptyProduct: Omit<Product, 'created_at' | 'updated_at'> = {
     id: '',
@@ -47,6 +108,7 @@ export default function AdminPage() {
     color: 'blue',
     url: '',
     shop_link: '',
+    modal_html: '',
     price: 0,
     duration_months: 3,
     is_lifetime: false,
@@ -56,6 +118,7 @@ export default function AdminPage() {
 
   const [formData, setFormData] = useState<Omit<Product, 'created_at' | 'updated_at'>>(emptyProduct);
   const [featuresText, setFeaturesText] = useState('');
+  const [showHtmlPreview, setShowHtmlPreview] = useState(false);
 
   useEffect(() => {
     async function checkAdmin() {
@@ -91,6 +154,20 @@ export default function AdminPage() {
       }
     } catch (err) {
       setError('Erro ao carregar produtos');
+    }
+  }
+
+  async function loadUsers() {
+    setUsersLoading(true);
+    try {
+      const res = await fetch('/api/admin/users');
+      if (!res.ok) throw new Error('Failed to fetch users');
+      const data = await res.json();
+      setAllUsers(data.users || []);
+    } catch (err) {
+      setError('Erro ao carregar usuários');
+    } finally {
+      setUsersLoading(false);
     }
   }
 
@@ -139,6 +216,7 @@ export default function AdminPage() {
     setFormData(product);
     setFeaturesText(product.features.join('\n'));
     setIsCreating(false);
+    setShowHtmlPreview(false);
     setError(null);
     setSuccess(null);
   }
@@ -148,6 +226,7 @@ export default function AdminPage() {
     setFormData(emptyProduct);
     setFeaturesText('');
     setIsCreating(true);
+    setShowHtmlPreview(false);
     setError(null);
     setSuccess(null);
   }
@@ -157,6 +236,7 @@ export default function AdminPage() {
     setIsCreating(false);
     setFormData(emptyProduct);
     setFeaturesText('');
+    setShowHtmlPreview(false);
     setError(null);
   }
 
@@ -226,27 +306,79 @@ export default function AdminPage() {
     return null;
   }
 
+  const filteredUsers = allUsers.filter(u => {
+    if (!userSearch) return true;
+    const q = userSearch.toLowerCase();
+    return u.name?.toLowerCase().includes(q) || u.email?.toLowerCase().includes(q);
+  });
+
+  function toggleUser(userId: string) {
+    setExpandedUsers(prev => ({ ...prev, [userId]: !prev[userId] }));
+  }
+
+  function formatDate(dateStr: string) {
+    return new Date(dateStr).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  }
+
+  function isExpired(dateStr: string) {
+    return new Date(dateStr) < new Date();
+  }
+
+  function isLifetimeDate(dateStr: string) {
+    return new Date(dateStr).getFullYear() > new Date().getFullYear() + 50;
+  }
+
   return (
     <div className="min-h-screen bg-slate-900">
-      <header className="bg-slate-800/50 border-b border-slate-700 py-4 px-6 sticky top-0 z-50 backdrop-blur-sm">
-        <div className="max-w-6xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => router.push('/')}
-              className="text-slate-400 hover:text-white transition-colors"
-            >
-              <ArrowLeft className="w-5 h-5" />
-            </button>
-            <div className="flex items-center gap-3">
-              <div className="bg-violet-600 p-2 rounded-lg">
-                <Package className="w-5 h-5 text-white" />
+      <header className="bg-slate-800/50 border-b border-slate-700 sticky top-0 z-50 backdrop-blur-sm">
+        <div className="max-w-6xl mx-auto px-6">
+          <div className="flex items-center justify-between py-4">
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => router.push('/')}
+                className="text-slate-400 hover:text-white transition-colors"
+              >
+                <ArrowLeft className="w-5 h-5" />
+              </button>
+              <div className="flex items-center gap-3">
+                <div className="bg-violet-600 p-2 rounded-lg">
+                  <ShieldCheck className="w-5 h-5 text-white" />
+                </div>
+                <span className="text-xl font-semibold text-white">Admin</span>
               </div>
-              <span className="text-xl font-semibold text-white">Admin - Produtos</span>
             </div>
+            {activeTab === 'products' && (
+              <Button variant="primary" onClick={startCreate}>
+                <Plus className="w-4 h-4" /> Novo Produto
+              </Button>
+            )}
           </div>
-          <Button variant="primary" onClick={startCreate}>
-            <Plus className="w-4 h-4" /> Novo Produto
-          </Button>
+          {/* Tabs */}
+          <div className="flex gap-1">
+            <button
+              onClick={() => setActiveTab('products')}
+              className={`px-4 py-2.5 text-sm font-medium rounded-t-lg transition-colors flex items-center gap-2 ${
+                activeTab === 'products'
+                  ? 'bg-slate-900 text-white border-t border-x border-slate-700'
+                  : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
+              }`}
+            >
+              <Package className="w-4 h-4" /> Produtos
+            </button>
+            <button
+              onClick={() => {
+                setActiveTab('users');
+                if (allUsers.length === 0) loadUsers();
+              }}
+              className={`px-4 py-2.5 text-sm font-medium rounded-t-lg transition-colors flex items-center gap-2 ${
+                activeTab === 'users'
+                  ? 'bg-slate-900 text-white border-t border-x border-slate-700'
+                  : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
+              }`}
+            >
+              <Users className="w-4 h-4" /> Usuários
+            </button>
+          </div>
         </div>
       </header>
 
@@ -262,6 +394,7 @@ export default function AdminPage() {
           </div>
         )}
 
+        {activeTab === 'products' && <>
         {(isCreating || editingProduct) && (
           <div className="mb-8 bg-slate-800/50 border border-slate-700 rounded-xl p-6">
             <h2 className="text-lg font-semibold text-white mb-6">
@@ -301,15 +434,16 @@ export default function AdminPage() {
               />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
               <div>
-                <label className="block text-sm font-medium text-slate-400 mb-1">URL do Produto (acesso)</label>
+                <label className="block text-sm font-medium text-slate-400 mb-1">URL do Produto (redirect)</label>
                 <Input
                   value={formData.url}
                   onChange={(e) => setFormData({ ...formData, url: e.target.value })}
                   placeholder="https://app.exemplo.com"
                   className="bg-slate-900/50 border-slate-600 text-white"
                 />
+                <p className="text-xs text-slate-500 mt-1">URL de destino após autenticação</p>
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-400 mb-1">Link da Loja (compra)</label>
@@ -319,7 +453,67 @@ export default function AdminPage() {
                   placeholder="https://loja.exemplo.com/produto"
                   className="bg-slate-900/50 border-slate-600 text-white"
                 />
+                <p className="text-xs text-slate-500 mt-1">Link externo para compra</p>
               </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-400 mb-1">Preço</label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  value={formData.price}
+                  onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) || 0 })}
+                  className="bg-slate-900/50 border-slate-600 text-white"
+                />
+              </div>
+            </div>
+
+            {/* Modal HTML Section */}
+            <div className="mb-4">
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-sm font-medium text-slate-400 flex items-center gap-2">
+                  <Code className="w-4 h-4" /> HTML do Modal de Introdução
+                </label>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const exampleHtml = EXAMPLE_MODAL_HTML.replace('SEU_PRODUTO_ID', formData.id || 'produto-id');
+                      setFormData({ ...formData, modal_html: exampleHtml });
+                    }}
+                    className="text-xs text-blue-400 hover:text-blue-300 flex items-center gap-1 transition-colors"
+                  >
+                    <FileCode className="w-3 h-3" /> Inserir exemplo
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowHtmlPreview(!showHtmlPreview)}
+                    className="text-xs text-slate-400 hover:text-white flex items-center gap-1 transition-colors"
+                  >
+                    {showHtmlPreview ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+                    {showHtmlPreview ? 'Editar' : 'Pré-visualizar'}
+                  </button>
+                </div>
+              </div>
+              {showHtmlPreview ? (
+                <div className="w-full min-h-[200px] bg-slate-800 border border-slate-600 rounded-lg overflow-hidden">
+                  <div className="px-3 py-2 bg-slate-700/50 border-b border-slate-600 text-xs text-slate-400">Pré-visualização</div>
+                  <div
+                    className="product-modal-content p-4"
+                    dangerouslySetInnerHTML={{ __html: formData.modal_html || '<p style="color: #64748b;">Nenhum HTML inserido ainda.</p>' }}
+                  />
+                </div>
+              ) : (
+                <textarea
+                  value={formData.modal_html || ''}
+                  onChange={(e) => setFormData({ ...formData, modal_html: e.target.value })}
+                  placeholder='<h2>Bem-vindo!</h2>\n<p>Instruções do produto...</p>\n<a href="/api/products/redirect?product=id" class="btn-primary">Acessar →</a>'
+                  rows={10}
+                  className="w-full px-4 py-2 bg-slate-900/50 border border-slate-600 rounded-lg text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
+                />
+              )}
+              <p className="text-xs text-slate-500 mt-1">
+                Use classes: <code className="text-blue-400">btn-primary</code>, <code className="text-blue-400">btn-outline</code>, <code className="text-blue-400">info-box</code>, <code className="text-blue-400">warning-box</code>, <code className="text-blue-400">success-box</code>, <code className="text-blue-400">steps</code>. Deixe vazio para redirecionar direto.
+              </p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
@@ -535,6 +729,130 @@ export default function AdminPage() {
             ))
           )}
         </div>
+        </>}
+
+        {activeTab === 'users' && (
+          <div>
+            {/* Search bar */}
+            <div className="mb-6">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                <Input
+                  value={userSearch}
+                  onChange={(e) => setUserSearch(e.target.value)}
+                  placeholder="Buscar por nome ou email..."
+                  className="pl-10 bg-slate-800/50 border-slate-700 text-white placeholder:text-slate-500"
+                />
+              </div>
+            </div>
+
+            {usersLoading ? (
+              <div className="flex items-center justify-center py-16">
+                <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
+              </div>
+            ) : filteredUsers.length === 0 ? (
+              <div className="text-center py-12 text-slate-500">
+                {userSearch ? 'Nenhum usuário encontrado.' : 'Nenhum usuário cadastrado.'}
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <div className="text-sm text-slate-500 mb-4">
+                  {filteredUsers.length} usuário{filteredUsers.length !== 1 ? 's' : ''} encontrado{filteredUsers.length !== 1 ? 's' : ''}
+                </div>
+                {filteredUsers.map((user) => (
+                  <div
+                    key={user.id}
+                    className="bg-slate-800/50 border border-slate-700 rounded-xl overflow-hidden"
+                  >
+                    <button
+                      onClick={() => toggleUser(user.id)}
+                      className="w-full px-6 py-4 flex items-center justify-between hover:bg-slate-700/30 transition-colors"
+                    >
+                      <div className="flex items-center gap-4 min-w-0">
+                        <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-violet-600 rounded-full flex items-center justify-center flex-shrink-0">
+                          <span className="text-sm font-bold text-white">
+                            {user.name?.charAt(0).toUpperCase() || 'U'}
+                          </span>
+                        </div>
+                        <div className="text-left min-w-0">
+                          <p className="text-white font-medium truncate">{user.name || 'Sem nome'}</p>
+                          <p className="text-sm text-slate-400 flex items-center gap-1.5 truncate">
+                            <Mail className="w-3 h-3 flex-shrink-0" /> {user.email}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3 flex-shrink-0 ml-4">
+                        <div className="flex items-center gap-2">
+                          {user.products.length > 0 ? (
+                            <Badge variant="success">{user.products.length} produto{user.products.length !== 1 ? 's' : ''}</Badge>
+                          ) : (
+                            <Badge variant="default">Sem produtos</Badge>
+                          )}
+                        </div>
+                        <div className="text-slate-500 flex items-center gap-1 text-xs">
+                          <Calendar className="w-3 h-3" /> {formatDate(user.created_at)}
+                        </div>
+                        {expandedUsers[user.id] ? (
+                          <ChevronUp className="w-4 h-4 text-slate-400" />
+                        ) : (
+                          <ChevronDown className="w-4 h-4 text-slate-400" />
+                        )}
+                      </div>
+                    </button>
+
+                    {expandedUsers[user.id] && (
+                      <div className="px-6 pb-4 border-t border-slate-700/50">
+                        <div className="pt-4 space-y-2">
+                          <p className="text-xs text-slate-500 mb-3">ID: <code className="text-slate-400">{user.id}</code></p>
+                          {user.products.length === 0 ? (
+                            <p className="text-sm text-slate-500 py-2">Este usuário não possui nenhum produto ativo.</p>
+                          ) : (
+                            <div className="space-y-2">
+                              {user.products.map((up) => (
+                                <div
+                                  key={up.id}
+                                  className="flex items-center justify-between bg-slate-900/50 rounded-lg px-4 py-3"
+                                >
+                                  <div className="min-w-0">
+                                    <p className="text-sm font-medium text-white">{up.product_name}</p>
+                                    <div className="flex items-center gap-3 mt-1 text-xs text-slate-500">
+                                      <span>Código: <code className="text-slate-400">{up.activation_code}</code></span>
+                                      <span>Ativado: {formatDate(up.activated_at)}</span>
+                                    </div>
+                                  </div>
+                                  <div className="flex-shrink-0 ml-4">
+                                    {isLifetimeDate(up.expires_at) ? (
+                                      <Badge variant="success" className="flex items-center gap-1">
+                                        <Infinity className="w-3 h-3" /> Vitalício
+                                      </Badge>
+                                    ) : isExpired(up.expires_at) ? (
+                                      <Badge variant="error">Expirado</Badge>
+                                    ) : (
+                                      <Badge variant="default">
+                                        Expira: {formatDate(up.expires_at)}
+                                      </Badge>
+                                    )}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Refresh button */}
+            <div className="mt-6 flex justify-center">
+              <Button variant="ghost" onClick={loadUsers} disabled={usersLoading}>
+                <RefreshCw className={`w-4 h-4 ${usersLoading ? 'animate-spin' : ''}`} /> Atualizar lista
+              </Button>
+            </div>
+          </div>
+        )}
       </main>
     </div>
   );
