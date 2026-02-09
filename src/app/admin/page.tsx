@@ -86,6 +86,15 @@ export default function AdminPage() {
   <li>Comece a usar todas as funcionalidades</li>
 </ul>
 
+<div class="video-container">
+  <iframe 
+    src="https://www.youtube.com/embed/dQw4w9WgXcQ" 
+    title="Video tutorial"
+    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+    allowfullscreen>
+  </iframe>
+</div>
+
 <div class="warning-box">
   <strong>Atenção:</strong> Não compartilhe seu link de acesso com outras pessoas.
 </div>
@@ -96,7 +105,6 @@ export default function AdminPage() {
   <a href="/api/products/redirect?product=SEU_PRODUTO_ID" class="btn-primary">Acessar Produto →</a>
 </p>
 <p style="text-align: center; margin-top: 0.5rem;">
-  <a href="#" class="btn-outline">Ver documentação</a>
 </p>`;
 
   const emptyProduct: Omit<Product, 'created_at' | 'updated_at'> = {
