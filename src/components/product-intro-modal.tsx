@@ -38,7 +38,7 @@ export function ProductIntroModal({ productName, html, onClose }: ProductIntroMo
       />
 
       {/* Modal */}
-      <div className="relative w-full max-w-2xl max-h-[90vh] bg-slate-800 border border-slate-700/50 rounded-2xl shadow-2xl shadow-black/50 flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+      <div className="relative w-full max-w-4xl max-h-[90vh] bg-slate-800 border border-slate-700/50 rounded-2xl shadow-2xl shadow-black/50 flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-700/50 flex-shrink-0">
           <h2 className="text-lg font-semibold text-white truncate pr-4">{productName}</h2>

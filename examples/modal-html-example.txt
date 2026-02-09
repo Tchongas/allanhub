@@ -20,20 +20,8 @@
   <li><strong>Kits de festa completos</strong> — rótulos, tags, toppers e mais</li>
   <li><strong>Estilos 2D e 3D</strong> — gerados por inteligência artificial</li>
 </ul>
-
-<div class="warning-box">
-  <strong>⚠️ Atenção:</strong> Não compartilhe seu link de acesso com outras pessoas. Cada conta é individual e intransferível.
-</div>
-
-<div class="success-box">
-  <strong>✅ Seu acesso está ativo!</strong> Você pode usar o produto quantas vezes quiser durante o período da sua assinatura.
-</div>
-
 <hr>
 
 <p style="text-align: center;">
-  <a href="/api/products/redirect?product=festa-magica" class="btn-primary">🚀 Acessar Produto</a>
-</p>
-<p style="text-align: center; margin-top: 0.75rem;">
-  <a href="https://docs.exemplo.com" target="_blank" class="btn-outline">📖 Ver documentação</a>
+  <a href="https://ai.studio/apps/drive/1iwt-hQrhuzIQKdY3VmilGR7cp6-umOsH?fullscreenApplet=true" class="btn-primary">🚀 Acessar Produto</a>
 </p>

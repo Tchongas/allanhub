@@ -1,0 +1,498 @@
+<!-- ============================================
+     MODAL HTML COMPONENTS — REFERENCE GUIDE
+     ============================================
+     
+     This file documents every available CSS class
+     and HTML pattern you can use inside the product
+     intro modal. Copy any section you need.
+     
+     All classes are scoped to .product-modal-content
+     so they only work inside the modal.
+============================================ -->
+
+
+<!-- ============================================
+     1. TYPOGRAPHY
+============================================ -->
+
+<h1>Heading 1 — Page Title</h1>
+<h2>Heading 2 — Section Title</h2>
+<h3>Heading 3 — Subsection</h3>
+<h4>Heading 4 — Small Label</h4>
+
+<p>Regular paragraph text. Use <strong>bold</strong> for emphasis, <em>italic</em> for secondary info, and <mark>highlight</mark> for key terms.</p>
+
+<p><small>Small text — useful for disclaimers or footnotes.</small></p>
+
+<p>Inline <code>code snippets</code> for technical references.</p>
+
+
+<!-- ============================================
+     2. LINKS
+============================================ -->
+
+<p>Regular link: <a href="https://example.com">Click here</a></p>
+<p>External link: <a href="https://example.com" target="_blank">Opens in new tab</a></p>
+
+
+<!-- ============================================
+     3. LISTS — Bullet
+============================================ -->
+
+<h3>Bullet List</h3>
+<ul>
+  <li>First item in the list</li>
+  <li>Second item with <strong>bold text</strong></li>
+  <li>Third item with a <a href="#">link</a></li>
+</ul>
+
+
+<!-- ============================================
+     4. LISTS — Numbered
+============================================ -->
+
+<h3>Numbered List</h3>
+<ol>
+  <li>Step one of the process</li>
+  <li>Step two of the process</li>
+  <li>Step three of the process</li>
+</ol>
+
+
+<!-- ============================================
+     5. STEPS — Styled Numbered Circles
+============================================ -->
+
+<h3>Steps (with circle numbers)</h3>
+<ul class="steps">
+  <li>Open the application using the button below</li>
+  <li>Log in with your Hub account credentials</li>
+  <li>Navigate to the dashboard and start creating</li>
+  <li>Download your finished files in high quality</li>
+</ul>
+
+
+<!-- ============================================
+     6. FEATURE LIST — Checkmarks
+============================================ -->
+
+<h3>Feature List (checkmarks)</h3>
+<ul class="feature-list">
+  <li>Unlimited generation of designs</li>
+  <li>High quality downloads (PNG, PDF)</li>
+  <li>2D and 3D art styles</li>
+  <li>Custom themes and colors</li>
+  <li>Priority support included</li>
+</ul>
+
+
+<!-- ============================================
+     7. ICON LIST — Custom Emoji Icons
+============================================ -->
+
+<h3>Icon List (custom icons)</h3>
+<ul class="icon-list">
+  <li data-icon="🎨">Design tools and templates</li>
+  <li data-icon="📦">Export in multiple formats</li>
+  <li data-icon="⚡">Real-time AI generation</li>
+  <li data-icon="🔒">Secure and private</li>
+</ul>
+
+
+<!-- ============================================
+     8. ALERT BOXES
+============================================ -->
+
+<h3>Alert Boxes</h3>
+
+<div class="info-box">
+  <strong>💡 Info:</strong> This is an informational message. Use it for tips and helpful notes.
+</div>
+
+<div class="warning-box">
+  <strong>⚠️ Warning:</strong> This is a warning message. Use it for important cautions.
+</div>
+
+<div class="success-box">
+  <strong>✅ Success:</strong> This is a success message. Use it for confirmations.
+</div>
+
+<div class="error-box">
+  <strong>❌ Error:</strong> This is an error message. Use it for critical alerts.
+</div>
+
+<div class="neutral-box">
+  <strong>📋 Note:</strong> This is a neutral message. Use it for general notes.
+</div>
+
+
+<!-- ============================================
+     9. BUTTONS
+============================================ -->
+
+<h3>Buttons</h3>
+
+<p>
+  <a href="#" class="btn-primary">Primary Button</a>
+</p>
+<p>
+  <a href="#" class="btn-outline">Outline Button</a>
+</p>
+<p>
+  <a href="#" class="btn-success">Success Button</a>
+</p>
+<p>
+  <a href="#" class="btn-danger">Danger Button</a>
+</p>
+
+<h4>Button Sizes</h4>
+<p>
+  <a href="#" class="btn-primary btn-sm">Small Button</a>
+</p>
+<p>
+  <a href="#" class="btn-primary">Default Button</a>
+</p>
+<p>
+  <a href="#" class="btn-primary btn-lg">Large Button</a>
+</p>
+
+<h4>Full Width Button</h4>
+<p>
+  <a href="#" class="btn-primary btn-block">Full Width Button</a>
+</p>
+
+<h4>Buttons Side by Side</h4>
+<div class="flex-center">
+  <a href="#" class="btn-primary">Accept</a>
+  <a href="#" class="btn-outline">Cancel</a>
+</div>
+
+
+<!-- ============================================
+     10. CARDS
+============================================ -->
+
+<h3>Card</h3>
+<div class="card">
+  <div class="card-header">Card Title</div>
+  <div class="card-body">
+    This is the card body content. You can put any text, lists, or other elements here.
+  </div>
+  <div class="card-footer">
+    <a href="#" class="btn-primary btn-sm">Action</a>
+  </div>
+</div>
+
+
+<!-- ============================================
+     11. GRID LAYOUT — 2 Columns
+============================================ -->
+
+<h3>2-Column Grid (stacks on mobile)</h3>
+<div class="grid-2">
+  <div class="card">
+    <div class="card-header">🎨 Design</div>
+    <div class="card-body">Create beautiful designs with AI-powered tools.</div>
+  </div>
+  <div class="card">
+    <div class="card-header">📦 Export</div>
+    <div class="card-body">Download in PNG, PDF, or SVG formats.</div>
+  </div>
+</div>
+
+
+<!-- ============================================
+     12. GRID LAYOUT — 3 Columns
+============================================ -->
+
+<h3>3-Column Grid (stacks on mobile)</h3>
+<div class="grid-3">
+  <div class="card">
+    <div class="card-header">Free</div>
+    <div class="card-body">Basic features<br><strong>R$ 0/mês</strong></div>
+  </div>
+  <div class="card">
+    <div class="card-header">Pro</div>
+    <div class="card-body">All features<br><strong>R$ 29/mês</strong></div>
+  </div>
+  <div class="card">
+    <div class="card-header">Enterprise</div>
+    <div class="card-body">Custom plan<br><strong>Contato</strong></div>
+  </div>
+</div>
+
+
+<!-- ============================================
+     13. BADGES / TAGS
+============================================ -->
+
+<h3>Badges</h3>
+<p>
+  <span class="badge">Default</span>
+  <span class="badge badge-green">Active</span>
+  <span class="badge badge-yellow">Pending</span>
+  <span class="badge badge-red">Expired</span>
+  <span class="badge badge-purple">Premium</span>
+  <span class="badge badge-gray">Archived</span>
+</p>
+
+
+<!-- ============================================
+     14. TABLE
+============================================ -->
+
+<h3>Table</h3>
+<table>
+  <thead>
+    <tr>
+      <th>Feature</th>
+      <th>Free</th>
+      <th>Pro</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Generations per month</td>
+      <td>10</td>
+      <td>Unlimited</td>
+    </tr>
+    <tr>
+      <td>HD Downloads</td>
+      <td>❌</td>
+      <td>✅</td>
+    </tr>
+    <tr>
+      <td>Priority Support</td>
+      <td>❌</td>
+      <td>✅</td>
+    </tr>
+  </tbody>
+</table>
+
+
+<!-- ============================================
+     15. BLOCKQUOTE
+============================================ -->
+
+<h3>Blockquote</h3>
+<blockquote>
+  "This product changed the way I create party invitations. Highly recommended!"
+  <br><small>— Maria S., customer</small>
+</blockquote>
+
+
+<!-- ============================================
+     16. CODE BLOCK
+============================================ -->
+
+<h3>Code Block</h3>
+<pre><code>// Example API usage
+const response = await fetch('/api/generate', {
+  method: 'POST',
+  body: JSON.stringify({ theme: 'unicorn', style: '3d' })
+});
+const data = await response.json();</code></pre>
+
+
+<!-- ============================================
+     17. DIVIDERS
+============================================ -->
+
+<h3>Dividers</h3>
+
+<p>Simple horizontal rule:</p>
+<hr>
+
+<p>Divider with text label:</p>
+<div class="divider-text">Or continue with</div>
+
+
+<!-- ============================================
+     18. ACCORDION / COLLAPSIBLE
+============================================ -->
+
+<h3>Accordion (collapsible sections)</h3>
+
+<details>
+  <summary>How do I access the product?</summary>
+  <div>Click the "Acessar Produto" button below. You will be automatically authenticated with your Hub account.</div>
+</details>
+
+<details>
+  <summary>Can I use it on mobile?</summary>
+  <div>Yes! The product is fully responsive and works on any device with a modern browser.</div>
+</details>
+
+<details>
+  <summary>What if my subscription expires?</summary>
+  <div>You will lose access to the product until you renew. Your previously created content will be saved.</div>
+</details>
+
+
+<!-- ============================================
+     19. PROGRESS BAR
+============================================ -->
+
+<h3>Progress Bar</h3>
+<p>Setup progress: 75%</p>
+<div class="progress-bar">
+  <div class="progress-fill" style="width: 75%"></div>
+</div>
+
+<p>Storage used: 30%</p>
+<div class="progress-bar">
+  <div class="progress-fill" style="width: 30%"></div>
+</div>
+
+
+<!-- ============================================
+     20. KEYBOARD SHORTCUTS
+============================================ -->
+
+<h3>Keyboard Shortcuts</h3>
+<p>Press <kbd>Ctrl</kbd> + <kbd>S</kbd> to save your work.</p>
+<p>Use <kbd>Esc</kbd> to close this modal.</p>
+
+
+<!-- ============================================
+     21. IMAGES
+============================================ -->
+
+<h3>Images</h3>
+
+<p>Default image (full width, rounded corners):</p>
+<img src="https://placehold.co/800x400/1e293b/60a5fa?text=Product+Screenshot" alt="Screenshot">
+
+<p>Centered medium image with shadow:</p>
+<img src="https://placehold.co/400x300/1e293b/60a5fa?text=Feature" alt="Feature" class="medium center shadow">
+
+<p>Small image:</p>
+<img src="https://placehold.co/200x200/1e293b/60a5fa?text=Icon" alt="Icon" class="small">
+
+<p>Round image (avatar style):</p>
+<img src="https://placehold.co/100x100/1e293b/60a5fa?text=AV" alt="Avatar" class="small rounded">
+
+
+<!-- ============================================
+     22. YOUTUBE VIDEO EMBED
+============================================ -->
+
+<h3>YouTube Video</h3>
+<p>Wrap the iframe in a <code>video-container</code> div for responsive 16:9 aspect ratio:</p>
+
+<div class="video-container">
+  <iframe 
+    src="https://www.youtube.com/embed/dQw4w9WgXcQ" 
+    title="Video tutorial"
+    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+    allowfullscreen>
+  </iframe>
+</div>
+
+
+<!-- ============================================
+     23. OTHER VIDEO EMBEDS
+============================================ -->
+
+<h3>Vimeo Video</h3>
+<div class="video-container">
+  <iframe 
+    src="https://player.vimeo.com/video/76979871" 
+    title="Vimeo video"
+    allow="autoplay; fullscreen; picture-in-picture" 
+    allowfullscreen>
+  </iframe>
+</div>
+
+<h3>HTML5 Video (direct file)</h3>
+<video controls>
+  <source src="https://example.com/video.mp4" type="video/mp4">
+  Your browser does not support the video tag.
+</video>
+
+
+<!-- ============================================
+     24. HIGHLIGHTED TEXT
+============================================ -->
+
+<h3>Highlighted Text</h3>
+<p>You can <mark>highlight important terms</mark> in any paragraph to draw attention.</p>
+
+
+<!-- ============================================
+     25. COMBINING COMPONENTS — Real Example
+============================================ -->
+
+<div class="divider-text">Full Example</div>
+
+<h2>Welcome to Festa Mágica! 🎉</h2>
+
+<p>Create personalized party invitations and kits with AI. Here's everything you need to know before getting started.</p>
+
+<div class="info-box">
+  <strong>💡 Tip:</strong> Bookmark the product link for quick access in the future.
+</div>
+
+<h3>Getting Started</h3>
+<ul class="steps">
+  <li>Click the access button below to open the app</li>
+  <li>You'll be logged in automatically with your Hub account</li>
+  <li>Choose a party theme and upload a photo</li>
+  <li>Download your personalized kit in high quality</li>
+</ul>
+
+<h3>What's Included</h3>
+<div class="grid-2">
+  <div class="card">
+    <div class="card-header">🎨 Design Tools</div>
+    <div class="card-body">
+      <ul class="feature-list">
+        <li>AI-powered generation</li>
+        <li>2D and 3D styles</li>
+        <li>Custom color palettes</li>
+      </ul>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-header">📦 Export Options</div>
+    <div class="card-body">
+      <ul class="feature-list">
+        <li>High resolution PNG</li>
+        <li>Print-ready PDF</li>
+        <li>Batch download</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<h3>Watch the Tutorial</h3>
+<div class="video-container">
+  <iframe 
+    src="https://www.youtube.com/embed/dQw4w9WgXcQ" 
+    title="Tutorial"
+    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+    allowfullscreen>
+  </iframe>
+</div>
+
+<details>
+  <summary>Frequently Asked Questions</summary>
+  <div>
+    <p><strong>Can I use it on my phone?</strong><br>Yes, the app is fully responsive.</p>
+    <p><strong>How many designs can I create?</strong><br>Unlimited during your subscription period.</p>
+    <p><strong>Can I cancel anytime?</strong><br>Yes, no commitment required.</p>
+  </div>
+</details>
+
+<div class="warning-box">
+  <strong>⚠️ Important:</strong> Do not share your access link with others. Each account is individual.
+</div>
+
+<hr>
+
+<div class="text-center">
+  <a href="https://your-product-url.com" class="btn-primary btn-lg">🚀 Access Product</a>
+</div>
+<div class="text-center mt-1">
+  <a href="https://docs.example.com" target="_blank" class="btn-outline">📖 Documentation</a>
+</div>

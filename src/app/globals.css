@@ -23,13 +23,16 @@ body {
   font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
-/* Product Intro Modal - base styles for admin HTML content */
+/* ============================================
+   Product Intro Modal — Base Styles
+   ============================================ */
 .product-modal-content {
   color: #e2e8f0;
   font-size: 0.9375rem;
   line-height: 1.7;
 }
 
+/* --- Typography --- */
 .product-modal-content h1,
 .product-modal-content h2,
 .product-modal-content h3,
@@ -44,10 +47,16 @@ body {
 .product-modal-content h1 { font-size: 1.5rem; }
 .product-modal-content h2 { font-size: 1.25rem; }
 .product-modal-content h3 { font-size: 1.1rem; }
+.product-modal-content h4 { font-size: 1rem; color: #94a3b8; }
 
 .product-modal-content p {
   margin-bottom: 0.75rem;
   color: #cbd5e1;
+}
+
+.product-modal-content small {
+  font-size: 0.8rem;
+  color: #64748b;
 }
 
 .product-modal-content a {
@@ -61,27 +70,6 @@ body {
   color: #93bbfc;
 }
 
-.product-modal-content ul,
-.product-modal-content ol {
-  margin: 0.75rem 0;
-  padding-left: 1.5rem;
-}
-
-.product-modal-content li {
-  margin-bottom: 0.35rem;
-  color: #cbd5e1;
-}
-
-.product-modal-content ul li { list-style-type: disc; }
-.product-modal-content ol li { list-style-type: decimal; }
-
-.product-modal-content img {
-  max-width: 100%;
-  height: auto;
-  border-radius: 0.75rem;
-  margin: 1rem 0;
-}
-
 .product-modal-content strong,
 .product-modal-content b {
   color: #ffffff;
@@ -93,21 +81,47 @@ body {
   color: #94a3b8;
 }
 
+.product-modal-content mark {
+  background: rgba(250, 204, 21, 0.2);
+  color: #fde68a;
+  padding: 0.1rem 0.3rem;
+  border-radius: 0.2rem;
+}
+
+/* --- Lists --- */
+.product-modal-content ul,
+.product-modal-content ol {
+  margin: 0.75rem 0;
+  padding-left: 2rem;
+}
+
+.product-modal-content li {
+  margin-bottom: 0.4rem;
+  color: #cbd5e1;
+  padding-left: 0.25rem;
+}
+
+.product-modal-content ul li { list-style-type: disc; }
+.product-modal-content ol li { list-style-type: decimal; }
+
+/* --- Dividers --- */
 .product-modal-content hr {
   border: none;
   border-top: 1px solid #334155;
   margin: 1.25rem 0;
 }
 
+/* --- Blockquote --- */
 .product-modal-content blockquote {
   border-left: 3px solid #3b82f6;
-  padding: 0.5rem 1rem;
+  padding: 0.75rem 1.25rem;
   margin: 1rem 0;
   background: rgba(59, 130, 246, 0.08);
   border-radius: 0 0.5rem 0.5rem 0;
   color: #94a3b8;
 }
 
+/* --- Code --- */
 .product-modal-content code {
   background: rgba(30, 41, 59, 0.8);
   padding: 0.15rem 0.4rem;
@@ -122,6 +136,7 @@ body {
   border-radius: 0.5rem;
   overflow-x: auto;
   margin: 1rem 0;
+  border: 1px solid #1e293b;
 }
 
 .product-modal-content pre code {
@@ -129,7 +144,88 @@ body {
   padding: 0;
 }
 
-/* CTA button style for admin use inside modal */
+/* --- Images --- */
+.product-modal-content img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 0.75rem;
+  margin: 1rem 0;
+  border: 1px solid #334155;
+}
+
+.product-modal-content img.rounded { border-radius: 9999px; }
+.product-modal-content img.shadow { box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4); }
+.product-modal-content img.small { max-width: 200px; }
+.product-modal-content img.medium { max-width: 400px; }
+.product-modal-content img.center { display: block; margin-left: auto; margin-right: auto; }
+
+/* --- Videos & Embeds --- */
+.product-modal-content .video-container {
+  position: relative;
+  width: 100%;
+  padding-bottom: 56.25%; /* 16:9 */
+  margin: 1rem 0;
+  border-radius: 0.75rem;
+  overflow: hidden;
+  background: #0f172a;
+  border: 1px solid #334155;
+}
+
+.product-modal-content .video-container iframe,
+.product-modal-content .video-container video,
+.product-modal-content .video-container embed,
+.product-modal-content .video-container object {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+.product-modal-content iframe {
+  max-width: 100%;
+  border: none;
+  border-radius: 0.75rem;
+  margin: 1rem 0;
+}
+
+.product-modal-content video {
+  max-width: 100%;
+  border-radius: 0.75rem;
+  margin: 1rem 0;
+}
+
+/* --- Tables --- */
+.product-modal-content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1rem 0;
+  font-size: 0.875rem;
+}
+
+.product-modal-content th {
+  background: rgba(30, 41, 59, 0.8);
+  color: #e2e8f0;
+  font-weight: 600;
+  text-align: left;
+  padding: 0.75rem 1rem;
+  border-bottom: 2px solid #334155;
+}
+
+.product-modal-content td {
+  padding: 0.625rem 1rem;
+  border-bottom: 1px solid #1e293b;
+  color: #cbd5e1;
+}
+
+.product-modal-content tr:hover td {
+  background: rgba(30, 41, 59, 0.4);
+}
+
+/* ============================================
+   Buttons
+   ============================================ */
 .product-modal-content .btn-primary,
 .product-modal-content a.btn-primary {
   display: inline-flex;
@@ -182,7 +278,76 @@ body {
   border-color: #64748b;
 }
 
-/* Alert/info boxes for admin use */
+.product-modal-content .btn-success,
+.product-modal-content a.btn-success {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: #059669;
+  color: #ffffff;
+  font-weight: 600;
+  font-size: 0.9375rem;
+  border-radius: 0.75rem;
+  text-decoration: none;
+  transition: all 0.2s;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(5, 150, 105, 0.3);
+}
+
+.product-modal-content .btn-success:hover,
+.product-modal-content a.btn-success:hover {
+  background: #047857;
+  box-shadow: 0 4px 20px rgba(5, 150, 105, 0.45);
+  color: #ffffff;
+}
+
+.product-modal-content .btn-danger,
+.product-modal-content a.btn-danger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: #dc2626;
+  color: #ffffff;
+  font-weight: 600;
+  font-size: 0.9375rem;
+  border-radius: 0.75rem;
+  text-decoration: none;
+  transition: all 0.2s;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(220, 38, 38, 0.3);
+}
+
+.product-modal-content .btn-danger:hover,
+.product-modal-content a.btn-danger:hover {
+  background: #b91c1c;
+  box-shadow: 0 4px 20px rgba(220, 38, 38, 0.45);
+  color: #ffffff;
+}
+
+.product-modal-content .btn-sm {
+  padding: 0.4rem 0.85rem;
+  font-size: 0.8rem;
+}
+
+.product-modal-content .btn-lg {
+  padding: 1rem 2rem;
+  font-size: 1.05rem;
+}
+
+.product-modal-content .btn-block {
+  display: flex;
+  width: 100%;
+}
+
+/* ============================================
+   Alert / Info Boxes
+   ============================================ */
 .product-modal-content .info-box {
   background: rgba(59, 130, 246, 0.1);
   border: 1px solid rgba(59, 130, 246, 0.25);
@@ -213,25 +378,49 @@ body {
   font-size: 0.875rem;
 }
 
-/* Steps list for admin use */
+.product-modal-content .error-box {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  border-radius: 0.75rem;
+  padding: 1rem 1.25rem;
+  margin: 1rem 0;
+  color: #fca5a5;
+  font-size: 0.875rem;
+}
+
+.product-modal-content .neutral-box {
+  background: rgba(100, 116, 139, 0.1);
+  border: 1px solid rgba(100, 116, 139, 0.25);
+  border-radius: 0.75rem;
+  padding: 1rem 1.25rem;
+  margin: 1rem 0;
+  color: #cbd5e1;
+  font-size: 0.875rem;
+}
+
+/* ============================================
+   Steps List (numbered circles)
+   ============================================ */
 .product-modal-content .steps {
   counter-reset: step;
   list-style: none;
   padding-left: 0;
+  margin: 1rem 0;
 }
 
 .product-modal-content .steps li {
   counter-increment: step;
   position: relative;
-  padding-left: 2.5rem;
+  padding-left: 3rem;
   margin-bottom: 1rem;
+  list-style: none;
 }
 
 .product-modal-content .steps li::before {
   content: counter(step);
   position: absolute;
   left: 0;
-  top: 0;
+  top: 0.1rem;
   width: 1.75rem;
   height: 1.75rem;
   background: rgba(59, 130, 246, 0.15);
@@ -241,5 +430,275 @@ body {
   align-items: center;
   justify-content: center;
   font-size: 0.8rem;
-  font-weight: 600;
+  font-weight: 700;
 }
+
+/* ============================================
+   Cards & Panels
+   ============================================ */
+.product-modal-content .card {
+  background: rgba(30, 41, 59, 0.5);
+  border: 1px solid #334155;
+  border-radius: 0.75rem;
+  padding: 1.25rem;
+  margin: 1rem 0;
+}
+
+.product-modal-content .card-header {
+  font-weight: 600;
+  color: #ffffff;
+  margin-bottom: 0.5rem;
+  font-size: 1rem;
+}
+
+.product-modal-content .card-body {
+  color: #cbd5e1;
+  font-size: 0.875rem;
+}
+
+.product-modal-content .card-footer {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid #334155;
+}
+
+/* ============================================
+   Grid Layout
+   ============================================ */
+.product-modal-content .grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin: 1rem 0;
+}
+
+.product-modal-content .grid-3 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 1rem;
+  margin: 1rem 0;
+}
+
+@media (max-width: 640px) {
+  .product-modal-content .grid-2,
+  .product-modal-content .grid-3 {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ============================================
+   Badges / Tags
+   ============================================ */
+.product-modal-content .badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.6rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: rgba(59, 130, 246, 0.15);
+  color: #60a5fa;
+  margin-right: 0.35rem;
+}
+
+.product-modal-content .badge-green {
+  background: rgba(16, 185, 129, 0.15);
+  color: #6ee7b7;
+}
+
+.product-modal-content .badge-yellow {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fcd34d;
+}
+
+.product-modal-content .badge-red {
+  background: rgba(239, 68, 68, 0.15);
+  color: #fca5a5;
+}
+
+.product-modal-content .badge-purple {
+  background: rgba(139, 92, 246, 0.15);
+  color: #c4b5fd;
+}
+
+.product-modal-content .badge-gray {
+  background: rgba(100, 116, 139, 0.15);
+  color: #94a3b8;
+}
+
+/* ============================================
+   Feature List (checkmarks)
+   ============================================ */
+.product-modal-content .feature-list {
+  list-style: none;
+  padding-left: 0;
+  margin: 1rem 0;
+}
+
+.product-modal-content .feature-list li {
+  position: relative;
+  padding-left: 2rem;
+  margin-bottom: 0.6rem;
+  list-style: none;
+}
+
+.product-modal-content .feature-list li::before {
+  content: "✓";
+  position: absolute;
+  left: 0;
+  color: #34d399;
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+/* ============================================
+   Icon List (custom icons via data-icon)
+   ============================================ */
+.product-modal-content .icon-list {
+  list-style: none;
+  padding-left: 0;
+  margin: 1rem 0;
+}
+
+.product-modal-content .icon-list li {
+  padding-left: 2rem;
+  margin-bottom: 0.6rem;
+  position: relative;
+  list-style: none;
+}
+
+.product-modal-content .icon-list li::before {
+  content: attr(data-icon);
+  position: absolute;
+  left: 0;
+  font-size: 1rem;
+}
+
+/* ============================================
+   Divider with text
+   ============================================ */
+.product-modal-content .divider-text {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin: 1.5rem 0;
+  color: #64748b;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.product-modal-content .divider-text::before,
+.product-modal-content .divider-text::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: #334155;
+}
+
+/* ============================================
+   Accordion / Collapsible (via <details>)
+   ============================================ */
+.product-modal-content details {
+  background: rgba(30, 41, 59, 0.5);
+  border: 1px solid #334155;
+  border-radius: 0.75rem;
+  margin: 0.75rem 0;
+  overflow: hidden;
+}
+
+.product-modal-content summary {
+  padding: 0.875rem 1.25rem;
+  cursor: pointer;
+  color: #e2e8f0;
+  font-weight: 500;
+  user-select: none;
+  transition: background 0.15s;
+}
+
+.product-modal-content summary:hover {
+  background: rgba(51, 65, 85, 0.3);
+}
+
+.product-modal-content details[open] summary {
+  border-bottom: 1px solid #334155;
+}
+
+.product-modal-content details > div,
+.product-modal-content details > p {
+  padding: 1rem 1.25rem;
+}
+
+/* ============================================
+   Progress Bar
+   ============================================ */
+.product-modal-content .progress-bar {
+  width: 100%;
+  height: 0.5rem;
+  background: #1e293b;
+  border-radius: 9999px;
+  overflow: hidden;
+  margin: 0.75rem 0;
+}
+
+.product-modal-content .progress-bar .progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+  border-radius: 9999px;
+  transition: width 0.3s ease;
+}
+
+/* ============================================
+   Keyboard Shortcut
+   ============================================ */
+.product-modal-content kbd {
+  background: #1e293b;
+  border: 1px solid #475569;
+  border-radius: 0.3rem;
+  padding: 0.15rem 0.45rem;
+  font-size: 0.8em;
+  font-family: inherit;
+  color: #e2e8f0;
+  box-shadow: 0 1px 0 #475569;
+}
+
+/* ============================================
+   Text Alignment Helpers
+   ============================================ */
+.product-modal-content .text-center { text-align: center; }
+.product-modal-content .text-right { text-align: right; }
+.product-modal-content .text-left { text-align: left; }
+.product-modal-content .text-muted { color: #64748b; }
+.product-modal-content .text-small { font-size: 0.8rem; }
+
+/* ============================================
+   Spacing Helpers
+   ============================================ */
+.product-modal-content .mt-0 { margin-top: 0; }
+.product-modal-content .mt-1 { margin-top: 0.5rem; }
+.product-modal-content .mt-2 { margin-top: 1rem; }
+.product-modal-content .mt-3 { margin-top: 1.5rem; }
+.product-modal-content .mb-0 { margin-bottom: 0; }
+.product-modal-content .mb-1 { margin-bottom: 0.5rem; }
+.product-modal-content .mb-2 { margin-bottom: 1rem; }
+.product-modal-content .mb-3 { margin-bottom: 1.5rem; }
+
+/* ============================================
+   Flex Helpers
+   ============================================ */
+.product-modal-content .flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+}
+
+.product-modal-content .flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.product-modal-content .gap-1 { gap: 0.5rem; }
+.product-modal-content .gap-2 { gap: 1rem; }
