@@ -33,10 +33,14 @@ export default function LoginContent() {
   const searchParams = useSearchParams();
   const [isLoading, setIsLoading] = useState(false);
   const error = searchParams.get('error');
+  const redirectTo = searchParams.get('redirect_to');
 
   const handleGoogleLogin = () => {
     setIsLoading(true);
-    window.location.href = '/api/auth/google';
+    const url = redirectTo 
+      ? `/api/auth/google?redirect_to=${encodeURIComponent(redirectTo)}`
+      : '/api/auth/google';
+    window.location.href = url;
   };
 
   return (

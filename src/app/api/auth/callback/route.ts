@@ -42,6 +42,16 @@ export async function GET(request: NextRequest) {
         path: '/',
       });
 
+      // Check for a stored redirect path (e.g. from /code/CODE activation)
+      const redirectTo = cookieStore.get('auth_redirect_to')?.value;
+      if (redirectTo) {
+        cookieStore.delete('auth_redirect_to');
+        // Only allow relative paths to prevent open redirect
+        if (redirectTo.startsWith('/')) {
+          return NextResponse.redirect(`${origin}${redirectTo}`);
+        }
+      }
+
       return NextResponse.redirect(`${origin}/`);
     }
   }
