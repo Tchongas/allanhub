@@ -50,7 +50,7 @@ export default function LoginContent() {
           <div className="mx-auto bg-blue-600 p-3 rounded-lg w-fit mb-4">
             <LogIn className="w-8 h-8 text-white" />
           </div>
-          <CardTitle className="text-2xl text-white">Entrar no Hub</CardTitle>
+          <CardTitle className="text-2xl text-white">Entrar na Área de Membros</CardTitle>
           <CardDescription>
             Acesse sua conta para gerenciar seus produtos
           </CardDescription>

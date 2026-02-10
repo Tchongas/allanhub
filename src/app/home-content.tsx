@@ -115,7 +115,7 @@ export default function HomeContent() {
             <div className="bg-gradient-to-br from-blue-500 to-violet-600 p-2.5 rounded-xl shadow-lg shadow-blue-500/20">
               <Sparkles className="w-5 h-5 text-white" />
             </div>
-            <span className="text-xl font-bold bg-gradient-to-r from-white to-slate-300 bg-clip-text text-transparent">Hub</span>
+            <span className="text-xl font-bold bg-gradient-to-r from-white to-slate-300 bg-clip-text text-transparent">Área de Membros</span>
           </div>
           <nav className="flex items-center gap-3">
             {!isLoading && isAdmin && (

@@ -9,7 +9,7 @@
 <h3>Como funciona</h3>
 <ul class="steps">
   <li>Clique no botão <strong>"Acessar Produto"</strong> abaixo</li>
-  <li>Você será autenticado automaticamente com sua conta do Hub</li>
+  <li>Você será autenticado automaticamente com sua conta da Área de Membros</li>
   <li>Escolha o tema da festa e faça upload da foto</li>
   <li>Baixe seus kits personalizados em alta qualidade</li>
 </ul>

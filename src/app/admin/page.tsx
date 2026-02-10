@@ -82,14 +82,14 @@ export default function AdminPage() {
 <h3>Como usar</h3>
 <ul class="steps">
   <li>Clique no botão abaixo para acessar o produto</li>
-  <li>Faça login com a mesma conta do Hub</li>
+  <li>Faça login com a mesma conta da Área de Membros</li>
   <li>Comece a usar todas as funcionalidades</li>
 </ul>
 
 <h3>Como usar (sem os numeros)</h3>
 <ul>
   <li>Clique no botão abaixo para acessar o produto</li>
-  <li>Faça login com a mesma conta do Hub</li>
+  <li>Faça login com a mesma conta da Área de Membros</li>
   <li>Comece a usar todas as funcionalidades</li>
 </ul>
 

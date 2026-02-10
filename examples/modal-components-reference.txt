@@ -66,7 +66,7 @@
 <h3>Steps (with circle numbers)</h3>
 <ul class="steps">
   <li>Open the application using the button below</li>
-  <li>Log in with your Hub account credentials</li>
+  <li>Log in with your member account credentials</li>
   <li>Navigate to the dashboard and start creating</li>
   <li>Download your finished files in high quality</li>
 </ul>
@@ -315,7 +315,7 @@ const data = await response.json();</code></pre>
 
 <details>
   <summary>How do I access the product?</summary>
-  <div>Click the "Acessar Produto" button below. You will be automatically authenticated with your Hub account.</div>
+  <div>Click the "Acessar Produto" button below. You will be automatically authenticated with your member account.</div>
 </details>
 
 <details>
@@ -436,7 +436,7 @@ const data = await response.json();</code></pre>
 <h3>Getting Started</h3>
 <ul class="steps">
   <li>Click the access button below to open the app</li>
-  <li>You'll be logged in automatically with your Hub account</li>
+  <li>You'll be logged in automatically with your member account</li>
   <li>Choose a party theme and upload a photo</li>
   <li>Download your personalized kit in high quality</li>
 </ul>

@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Hub - Central de Produtos",
+  title: "Área de Membros - Allan Fulcher",
   description: "Gerencie seus produtos e assinaturas",
 };
 
