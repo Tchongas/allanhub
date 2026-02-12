@@ -11,6 +11,7 @@ type ActivationState =
   | 'not_logged_in'  // user not logged in, prompt to login
   | 'activating'     // currently activating
   | 'success'        // code activated successfully
+  | 'already_owned'  // user already has this product active
   | 'already_used'   // code was already used
   | 'invalid'        // code is invalid or expired
   | 'error';         // generic error
@@ -75,11 +76,15 @@ export default function CodeActivationPage() {
         // Session expired or invalid — prompt login
         setIsAuthenticated(false);
         setState('not_logged_in');
+      } else if (response.status === 409 && data.error === 'already_owned') {
+        // User already has this product active
+        setProduct(data.product);
+        setState('already_owned');
       } else {
         const err = data.error || 'Erro desconhecido';
         if (err.includes('inválido') || err.includes('expirado')) {
           setState('invalid');
-        } else if (err.includes('já foi utilizado') || err.includes('already')) {
+        } else if (err.includes('já foi utilizado')) {
           setState('already_used');
         } else {
           setState('error');
@@ -214,6 +219,60 @@ export default function CodeActivationPage() {
                     <span className="text-slate-400 text-sm">Código</span>
                     <code className="text-blue-400 text-xs font-mono">{code}</code>
                   </div>
+                </div>
+              </div>
+            )}
+
+            <Button
+              onClick={() => router.push('/')}
+              className="w-full flex items-center justify-center gap-2 mb-3"
+            >
+              <Home className="w-5 h-5" />
+              Ir para o Início
+            </Button>
+
+            <Button
+              onClick={() => router.push('/dashboard')}
+              variant="outline"
+              className="w-full flex items-center justify-center gap-2"
+            >
+              Meus Produtos
+              <ArrowRight className="w-4 h-4" />
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Already Owned */}
+      {state === 'already_owned' && (
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center">
+            <div className="mx-auto bg-blue-600/20 p-4 rounded-2xl w-fit mb-2">
+              <CheckCircle className="w-10 h-10 text-blue-400" />
+            </div>
+            <CardTitle className="text-2xl text-white">Produto Já Ativado</CardTitle>
+            <CardDescription className="mt-2">
+              Você já possui este produto ativo na sua conta
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {product && (
+              <div className="bg-blue-900/20 border border-blue-800/30 rounded-xl p-4 mb-6">
+                <div className="flex flex-col gap-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-400 text-sm">Produto</span>
+                    <span className="text-white font-medium">{product.name}</span>
+                  </div>
+                  {product.expires_at && (
+                    <div className="flex items-center justify-between">
+                      <span className="text-slate-400 text-sm">Válido até</span>
+                      <span className="text-blue-400 text-sm font-medium">
+                        {new Date(product.expires_at).getFullYear() > 2100
+                          ? 'Vitalício ♾️'
+                          : new Date(product.expires_at).toLocaleDateString('pt-BR')}
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
             )}

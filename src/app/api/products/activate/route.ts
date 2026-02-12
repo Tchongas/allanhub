@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { validateActivationCode, activateProduct } from '@/lib/supabase/db';
+import { validateActivationCode, activateProduct, getActiveUserProduct } from '@/lib/supabase/db';
 import { getProduct } from '@/lib/products';
 import { cookies } from 'next/headers';
 import { createServiceRoleClient } from '@/lib/supabase/server';
@@ -49,6 +49,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: 'Produto não encontrado' },
         { status: 400 }
+      );
+    }
+
+    // Check if user already owns this product
+    const existingProduct = await getActiveUserProduct(user.id, activationCode.product_id);
+    if (existingProduct) {
+      return NextResponse.json(
+        { error: 'already_owned', product: { id: product.id, name: product.name, expires_at: existingProduct.expires_at } },
+        { status: 409 }
       );
     }
 
