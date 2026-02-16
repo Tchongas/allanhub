@@ -777,3 +777,65 @@ body {
   scrollbar-width: thin;
   scrollbar-color: rgba(100, 116, 139, 0.4) transparent;
 }
+
+/* ============================================
+   Banner Overlay — Styles for HTML content
+   rendered on top of banner images
+   ============================================ */
+.banner-overlay-content {
+  color: #ffffff !important;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5) !important;
+}
+
+.banner-overlay-content h1,
+.banner-overlay-content h2,
+.banner-overlay-content h3 {
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  margin-bottom: 0.5rem !important;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.6) !important;
+}
+
+.banner-overlay-content h1 { font-size: 2rem !important; }
+.banner-overlay-content h2 { font-size: 1.5rem !important; }
+.banner-overlay-content h3 { font-size: 1.125rem !important; }
+
+@media (min-width: 640px) {
+  .banner-overlay-content h1 { font-size: 2.5rem !important; }
+  .banner-overlay-content h2 { font-size: 2rem !important; }
+  .banner-overlay-content h3 { font-size: 1.5rem !important; }
+}
+
+.banner-overlay-content p {
+  color: rgba(255, 255, 255, 0.9) !important;
+  margin-bottom: 0.75rem !important;
+}
+
+.banner-overlay-content a,
+.banner-overlay-content .banner-btn {
+  display: inline-block !important;
+  padding: 0.625rem 1.5rem !important;
+  background: #3b82f6 !important;
+  color: #ffffff !important;
+  border-radius: 0.75rem !important;
+  font-weight: 600 !important;
+  font-size: 0.875rem !important;
+  text-decoration: none !important;
+  text-shadow: none !important;
+  transition: background 0.2s !important;
+  cursor: pointer !important;
+}
+
+.banner-overlay-content a:hover,
+.banner-overlay-content .banner-btn:hover {
+  background: #2563eb !important;
+}
+
+.banner-overlay-content .banner-btn-outline {
+  background: transparent !important;
+  border: 2px solid rgba(255, 255, 255, 0.8) !important;
+}
+
+.banner-overlay-content .banner-btn-outline:hover {
+  background: rgba(255, 255, 255, 0.15) !important;
+}

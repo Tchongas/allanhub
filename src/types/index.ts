@@ -45,6 +45,20 @@ export interface ActivationCode {
   expires_at?: Date;
 }
 
+export interface Banner {
+  id: string;
+  title: string;
+  image_url: string;
+  image_mobile_url?: string;
+  link_url?: string;
+  link_target?: '_self' | '_blank';
+  html_content?: string;
+  sort_order: number;
+  active: boolean;
+  created_at?: Date;
+  updated_at?: Date;
+}
+
 export interface AuthState {
   user: User | null;
   isLoading: boolean;

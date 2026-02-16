@@ -27,10 +27,14 @@ import {
   Search,
   Mail,
   Calendar,
-  ShieldCheck
+  ShieldCheck,
+  Image,
+  GripVertical,
+  ExternalLink,
+  Link
 } from 'lucide-react';
 import { Button, Input, Badge } from '@/components/ui';
-import { Product, ActivationCode } from '@/types';
+import { Product, ActivationCode, Banner } from '@/types';
 
 interface AdminUserProduct {
   id: string;
@@ -65,11 +69,29 @@ export default function AdminPage() {
   const [expandedCodes, setExpandedCodes] = useState<Record<string, boolean>>({});
   const [generatingCodes, setGeneratingCodes] = useState<string | null>(null);
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'products' | 'users'>('products');
+  const [activeTab, setActiveTab] = useState<'products' | 'banners' | 'users'>('products');
   const [allUsers, setAllUsers] = useState<AdminUser[]>([]);
   const [usersLoading, setUsersLoading] = useState(false);
   const [userSearch, setUserSearch] = useState('');
   const [expandedUsers, setExpandedUsers] = useState<Record<string, boolean>>({});
+
+  // Banner state
+  const [allBanners, setAllBanners] = useState<Banner[]>([]);
+  const [bannersLoading, setBannersLoading] = useState(false);
+  const [editingBanner, setEditingBanner] = useState<Banner | null>(null);
+  const [isCreatingBanner, setIsCreatingBanner] = useState(false);
+  const [isSavingBanner, setIsSavingBanner] = useState(false);
+  const [bannerForm, setBannerForm] = useState<Omit<Banner, 'id' | 'created_at' | 'updated_at'>>({
+    title: '',
+    image_url: '',
+    image_mobile_url: '',
+    link_url: '',
+    link_target: '_self',
+    html_content: '',
+    sort_order: 0,
+    active: true,
+  });
+  const [showBannerPreview, setShowBannerPreview] = useState(false);
 
   const EXAMPLE_MODAL_HTML = `<h2>Bem-vindo ao Produto!</h2>
 
@@ -183,6 +205,110 @@ export default function AdminPage() {
       setError('Erro ao carregar usuários');
     } finally {
       setUsersLoading(false);
+    }
+  }
+
+  // Banner functions
+  async function loadBanners() {
+    setBannersLoading(true);
+    try {
+      const res = await fetch('/api/admin/banners');
+      if (!res.ok) throw new Error('Failed to fetch banners');
+      const data = await res.json();
+      setAllBanners(data.banners || []);
+    } catch (err) {
+      setError('Erro ao carregar banners');
+    } finally {
+      setBannersLoading(false);
+    }
+  }
+
+  function startEditBanner(banner: Banner) {
+    setEditingBanner(banner);
+    setBannerForm({
+      title: banner.title,
+      image_url: banner.image_url,
+      image_mobile_url: banner.image_mobile_url || '',
+      link_url: banner.link_url || '',
+      link_target: banner.link_target || '_self',
+      html_content: banner.html_content || '',
+      sort_order: banner.sort_order,
+      active: banner.active,
+    });
+    setIsCreatingBanner(false);
+    setShowBannerPreview(false);
+    setError(null);
+    setSuccess(null);
+  }
+
+  function startCreateBanner() {
+    setEditingBanner(null);
+    setBannerForm({
+      title: '',
+      image_url: '',
+      image_mobile_url: '',
+      link_url: '',
+      link_target: '_self',
+      html_content: '',
+      sort_order: allBanners.length,
+      active: true,
+    });
+    setIsCreatingBanner(true);
+    setShowBannerPreview(false);
+    setError(null);
+    setSuccess(null);
+  }
+
+  function cancelEditBanner() {
+    setEditingBanner(null);
+    setIsCreatingBanner(false);
+    setShowBannerPreview(false);
+    setError(null);
+  }
+
+  async function handleSaveBanner() {
+    setIsSavingBanner(true);
+    setError(null);
+    setSuccess(null);
+
+    try {
+      const method = isCreatingBanner ? 'POST' : 'PUT';
+      const body = isCreatingBanner
+        ? bannerForm
+        : { id: editingBanner!.id, ...bannerForm };
+
+      const res = await fetch('/api/admin/banners', {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Erro ao salvar');
+
+      setSuccess(isCreatingBanner ? 'Banner criado com sucesso!' : 'Banner atualizado com sucesso!');
+      await loadBanners();
+      cancelEditBanner();
+    } catch (err: any) {
+      setError(err.message || 'Erro ao salvar banner');
+    } finally {
+      setIsSavingBanner(false);
+    }
+  }
+
+  async function handleDeleteBanner(id: string) {
+    if (!confirm('Tem certeza que deseja excluir este banner?')) return;
+
+    try {
+      const res = await fetch(`/api/admin/banners?id=${id}`, { method: 'DELETE' });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || 'Erro ao excluir');
+      }
+      setSuccess('Banner excluído com sucesso!');
+      await loadBanners();
+    } catch (err: any) {
+      setError(err.message || 'Erro ao excluir banner');
     }
   }
 
@@ -367,6 +493,11 @@ export default function AdminPage() {
                 <Plus className="w-4 h-4" /> Novo Produto
               </Button>
             )}
+            {activeTab === 'banners' && (
+              <Button variant="primary" onClick={startCreateBanner}>
+                <Plus className="w-4 h-4" /> Novo Banner
+              </Button>
+            )}
           </div>
           {/* Tabs */}
           <div className="flex gap-1">
@@ -379,6 +510,19 @@ export default function AdminPage() {
               }`}
             >
               <Package className="w-4 h-4" /> Produtos
+            </button>
+            <button
+              onClick={() => {
+                setActiveTab('banners');
+                if (allBanners.length === 0) loadBanners();
+              }}
+              className={`px-4 py-2.5 text-sm font-medium rounded-t-lg transition-colors flex items-center gap-2 ${
+                activeTab === 'banners'
+                  ? 'bg-slate-900 text-white border-t border-x border-slate-700'
+                  : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
+              }`}
+            >
+              <Image className="w-4 h-4" /> Banners
             </button>
             <button
               onClick={() => {
@@ -745,6 +889,251 @@ export default function AdminPage() {
           )}
         </div>
         </>}
+
+        {activeTab === 'banners' && (
+          <div>
+            {/* Banner Form */}
+            {(isCreatingBanner || editingBanner) && (
+              <div className="mb-8 bg-slate-800/50 border border-slate-700 rounded-xl p-6">
+                <h2 className="text-lg font-semibold text-white mb-6">
+                  {isCreatingBanner ? 'Novo Banner' : 'Editar Banner'}
+                </h2>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-400 mb-1">Título</label>
+                    <Input
+                      value={bannerForm.title}
+                      onChange={(e) => setBannerForm({ ...bannerForm, title: e.target.value })}
+                      placeholder="Nome do banner (interno)"
+                      className="bg-slate-900/50 border-slate-600 text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-400 mb-1">Ordem</label>
+                    <Input
+                      type="number"
+                      value={bannerForm.sort_order}
+                      onChange={(e) => setBannerForm({ ...bannerForm, sort_order: parseInt(e.target.value) || 0 })}
+                      className="bg-slate-900/50 border-slate-600 text-white"
+                    />
+                    <p className="text-xs text-slate-500 mt-1">Menor número = aparece primeiro</p>
+                  </div>
+                </div>
+
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-slate-400 mb-1">URL da Imagem (Desktop)</label>
+                  <Input
+                    value={bannerForm.image_url}
+                    onChange={(e) => setBannerForm({ ...bannerForm, image_url: e.target.value })}
+                    placeholder="https://exemplo.com/banner-desktop.jpg"
+                    className="bg-slate-900/50 border-slate-600 text-white"
+                  />
+                  <p className="text-xs text-slate-500 mt-1">Proporção recomendada: 21:7 (ex: 2100×700px)</p>
+                </div>
+
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-slate-400 mb-1">URL da Imagem (Mobile) — opcional</label>
+                  <Input
+                    value={bannerForm.image_mobile_url || ''}
+                    onChange={(e) => setBannerForm({ ...bannerForm, image_mobile_url: e.target.value })}
+                    placeholder="https://exemplo.com/banner-mobile.jpg"
+                    className="bg-slate-900/50 border-slate-600 text-white"
+                  />
+                  <p className="text-xs text-slate-500 mt-1">Proporção recomendada: 21:9 (ex: 1050×450px). Se vazio, usa a imagem desktop.</p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-400 mb-1 flex items-center gap-1">
+                      <Link className="w-3.5 h-3.5" /> Link (ao clicar) — opcional
+                    </label>
+                    <Input
+                      value={bannerForm.link_url || ''}
+                      onChange={(e) => setBannerForm({ ...bannerForm, link_url: e.target.value })}
+                      placeholder="https://exemplo.com/promo"
+                      className="bg-slate-900/50 border-slate-600 text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-400 mb-1">Abrir link em</label>
+                    <select
+                      value={bannerForm.link_target || '_self'}
+                      onChange={(e) => setBannerForm({ ...bannerForm, link_target: e.target.value as '_self' | '_blank' })}
+                      className="w-full h-11 px-4 bg-slate-900/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="_self">Mesma aba</option>
+                      <option value="_blank">Nova aba</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* HTML overlay */}
+                <div className="mb-4">
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-sm font-medium text-slate-400 flex items-center gap-2">
+                      <Code className="w-4 h-4" /> HTML Overlay (opcional)
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setShowBannerPreview(!showBannerPreview)}
+                      className="text-xs text-slate-400 hover:text-white flex items-center gap-1 transition-colors"
+                    >
+                      {showBannerPreview ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+                      {showBannerPreview ? 'Editar' : 'Pré-visualizar'}
+                    </button>
+                  </div>
+                  {showBannerPreview ? (
+                    <div className="w-full min-h-[100px] bg-slate-800 border border-slate-600 rounded-lg overflow-hidden">
+                      <div className="px-3 py-2 bg-slate-700/50 border-b border-slate-600 text-xs text-slate-400">Pré-visualização do overlay</div>
+                      <div
+                        className="banner-overlay-content p-4 text-center"
+                        dangerouslySetInnerHTML={{ __html: bannerForm.html_content || '<p style="color: #64748b;">Nenhum HTML inserido.</p>' }}
+                      />
+                    </div>
+                  ) : (
+                    <textarea
+                      value={bannerForm.html_content || ''}
+                      onChange={(e) => setBannerForm({ ...bannerForm, html_content: e.target.value })}
+                      placeholder='<h2 style="color:white;font-size:2rem;">Promoção!</h2>&#10;<p style="color:white;">Aproveite 50% de desconto</p>'
+                      rows={4}
+                      className="w-full px-4 py-2 bg-slate-900/50 border border-slate-600 rounded-lg text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
+                    />
+                  )}
+                  <p className="text-xs text-slate-500 mt-1">Texto/botões sobrepostos à imagem. Use inline styles para cores.</p>
+                </div>
+
+                <div className="flex items-center gap-4 mb-6">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={bannerForm.active}
+                      onChange={(e) => setBannerForm({ ...bannerForm, active: e.target.checked })}
+                      className="w-5 h-5 rounded border-slate-600 bg-slate-900/50 text-blue-600 focus:ring-blue-500"
+                    />
+                    <span className="text-sm text-slate-300">Banner Ativo</span>
+                  </label>
+                </div>
+
+                {/* Image preview */}
+                {bannerForm.image_url && (
+                  <div className="mb-6">
+                    <p className="text-xs text-slate-500 mb-2">Pré-visualização da imagem:</p>
+                    <div className="relative w-full aspect-[21/7] bg-slate-900/50 rounded-lg overflow-hidden border border-slate-700">
+                      <img
+                        src={bannerForm.image_url}
+                        alt="Preview"
+                        className="w-full h-full object-cover"
+                        onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                      />
+                      {bannerForm.html_content && (
+                        <div className="absolute inset-0 flex items-center justify-center p-4">
+                          <div
+                            className="banner-overlay-content text-center"
+                            dangerouslySetInnerHTML={{ __html: bannerForm.html_content }}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex gap-3">
+                  <Button variant="primary" onClick={handleSaveBanner} disabled={isSavingBanner}>
+                    {isSavingBanner ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                    Salvar
+                  </Button>
+                  <Button variant="ghost" onClick={cancelEditBanner}>
+                    <X className="w-4 h-4" /> Cancelar
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* Banner list */}
+            {bannersLoading ? (
+              <div className="flex items-center justify-center py-16">
+                <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
+              </div>
+            ) : allBanners.length === 0 ? (
+              <div className="text-center py-12 text-slate-500">
+                Nenhum banner cadastrado. Clique em &quot;Novo Banner&quot; para começar.
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {allBanners.map((banner) => (
+                  <div
+                    key={banner.id}
+                    className="bg-slate-800/50 border border-slate-700 rounded-xl overflow-hidden"
+                  >
+                    <div className="flex flex-col sm:flex-row">
+                      {/* Thumbnail */}
+                      <div className="sm:w-64 h-32 sm:h-auto bg-slate-900/50 flex-shrink-0 overflow-hidden">
+                        <img
+                          src={banner.image_url}
+                          alt={banner.title}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).style.display = 'none';
+                          }}
+                        />
+                      </div>
+                      {/* Info */}
+                      <div className="flex-1 p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1.5">
+                            <h3 className="text-base font-semibold text-white truncate">{banner.title}</h3>
+                            {banner.active ? (
+                              <Badge variant="success">Ativo</Badge>
+                            ) : (
+                              <Badge variant="secondary">Inativo</Badge>
+                            )}
+                          </div>
+                          <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500">
+                            <span className="flex items-center gap-1">
+                              <GripVertical className="w-3 h-3" /> Ordem: {banner.sort_order}
+                            </span>
+                            {banner.link_url && (
+                              <span className="flex items-center gap-1 truncate max-w-[200px]">
+                                <ExternalLink className="w-3 h-3 flex-shrink-0" /> {banner.link_url}
+                              </span>
+                            )}
+                            {banner.image_mobile_url && (
+                              <span className="text-blue-400">📱 Mobile</span>
+                            )}
+                            {banner.html_content && (
+                              <span className="text-violet-400">HTML overlay</span>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex gap-2 flex-shrink-0">
+                          <Button variant="ghost" size="icon" onClick={() => startEditBanner(banner)}>
+                            <Pencil className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="text-red-400 hover:text-red-300 hover:bg-red-900/20"
+                            onClick={() => handleDeleteBanner(banner.id)}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Refresh button */}
+            <div className="mt-6 flex justify-center">
+              <Button variant="ghost" onClick={loadBanners} disabled={bannersLoading}>
+                <RefreshCw className={`w-4 h-4 ${bannersLoading ? 'animate-spin' : ''}`} /> Atualizar lista
+              </Button>
+            </div>
+          </div>
+        )}
 
         {activeTab === 'users' && (
           <div>

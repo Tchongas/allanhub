@@ -6,7 +6,8 @@ import { AlertCircle, LogIn, Settings, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui';
 import { ProductCard } from '@/components/product-card';
 import { ProfileModal } from '@/components/profile-modal';
-import { User as UserType, UserProduct, Product } from '@/types';
+import { BannerCarousel } from '@/components/banner-carousel';
+import { User as UserType, UserProduct, Product, Banner } from '@/types';
 import { getDaysRemaining } from '@/lib/utils';
 
 export default function HomeContent() {
@@ -17,6 +18,7 @@ export default function HomeContent() {
   const [userProducts, setUserProducts] = useState<UserProduct[]>([]);
   const [showProfile, setShowProfile] = useState(false);
   const [products, setProducts] = useState<Product[]>([]);
+  const [banners, setBanners] = useState<Banner[]>([]);
   const [isAdmin, setIsAdmin] = useState(false);
 
   const errorParam = searchParams.get('error');
@@ -25,10 +27,15 @@ export default function HomeContent() {
   useEffect(() => {
     async function init() {
       try {
-        // Fetch products
-        const productsRes = await fetch('/api/products');
+        // Fetch products and banners in parallel
+        const [productsRes, bannersRes] = await Promise.all([
+          fetch('/api/products'),
+          fetch('/api/banners'),
+        ]);
         const productsData = await productsRes.json();
+        const bannersData = await bannersRes.json();
         setProducts(productsData.products || []);
+        setBanners(bannersData.banners || []);
 
         // Check auth
         const authRes = await fetch('/api/auth/verify');
@@ -180,6 +187,12 @@ export default function HomeContent() {
               : 'Conheça nossos produtos. Faça login para ativar seu código de acesso.'}
           </p>
         </div>
+
+        {banners.length > 0 && (
+          <div className="mb-10">
+            <BannerCarousel banners={banners} />
+          </div>
+        )}
 
         <div className="space-y-6">
           {products.map((product) => (
