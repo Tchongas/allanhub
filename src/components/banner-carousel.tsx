@@ -12,6 +12,7 @@ export function BannerCarousel({ banners }: BannerCarouselProps) {
   const [current, setCurrent] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
+  const [autoplayEnabled, setAutoplayEnabled] = useState(true);
   const touchStartX = useRef(0);
   const touchEndX = useRef(0);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -24,6 +25,14 @@ export function BannerCarousel({ banners }: BannerCarouselProps) {
 
   const next = useCallback(() => goTo(current + 1), [current, goTo]);
   const prev = useCallback(() => goTo(current - 1), [current, goTo]);
+
+  const disableAutoplay = useCallback(() => {
+    setAutoplayEnabled(false);
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+  }, []);
 
   useEffect(() => {
     const media = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -45,15 +54,17 @@ export function BannerCarousel({ banners }: BannerCarouselProps) {
     if (count <= 1) return;
     if (isHovered) return;
     if (prefersReducedMotion) return;
+    if (!autoplayEnabled) return;
 
     intervalRef.current = setInterval(next, 25000);
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, [next, count, isHovered, prefersReducedMotion]);
+  }, [next, count, isHovered, prefersReducedMotion, autoplayEnabled]);
 
   // Touch handlers for mobile swipe
   const handleTouchStart = (e: React.TouchEvent) => {
+    disableAutoplay();
     touchStartX.current = e.touches[0].clientX;
   };
 
@@ -76,10 +87,12 @@ export function BannerCarousel({ banners }: BannerCarouselProps) {
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'ArrowLeft') {
       e.preventDefault();
+      disableAutoplay();
       prev();
     }
     if (e.key === 'ArrowRight') {
       e.preventDefault();
+      disableAutoplay();
       next();
     }
   };
@@ -98,7 +111,7 @@ export function BannerCarousel({ banners }: BannerCarouselProps) {
       onKeyDown={handleKeyDown}
     >
       {/* Banner slide */}
-      <div className="block relative w-full aspect-[16/9] sm:aspect-[21/7] bg-slate-800/50 overflow-hidden">
+      <div className="block relative w-full aspect-[4/3] sm:aspect-[21/7] bg-slate-800/50 overflow-hidden">
         {banner.link_url && (
           <a
             href={banner.link_url}
@@ -142,14 +155,20 @@ export function BannerCarousel({ banners }: BannerCarouselProps) {
       {count > 1 && (
         <>
           <button
-            onClick={prev}
+            onClick={() => {
+              disableAutoplay();
+              prev();
+            }}
             className="absolute z-20 left-2 sm:left-3 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-black/40 hover:bg-black/60 backdrop-blur-sm text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
             aria-label="Banner anterior"
           >
             <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
           </button>
           <button
-            onClick={next}
+            onClick={() => {
+              disableAutoplay();
+              next();
+            }}
             className="absolute z-20 right-2 sm:right-3 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-black/40 hover:bg-black/60 backdrop-blur-sm text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
             aria-label="Próximo banner"
           >
@@ -164,7 +183,10 @@ export function BannerCarousel({ banners }: BannerCarouselProps) {
           {banners.map((_, i) => (
             <button
               key={i}
-              onClick={() => goTo(i)}
+              onClick={() => {
+                disableAutoplay();
+                goTo(i);
+              }}
               className={`rounded-full transition-all duration-300 ${
                 i === current
                   ? 'w-6 h-2 bg-white'
