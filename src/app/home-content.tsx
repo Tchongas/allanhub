@@ -179,6 +179,12 @@ export default function HomeContent() {
           </div>
         )}
 
+        {banners.length > 0 && (
+          <div className="mb-10">
+            <BannerCarousel banners={banners} />
+          </div>
+        )}
+
         <div className="mb-10">
           <h1 className="text-3xl font-bold bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent mb-3">Produtos</h1>
           <p className="text-slate-400 text-lg">
@@ -188,11 +194,7 @@ export default function HomeContent() {
           </p>
         </div>
 
-        {banners.length > 0 && (
-          <div className="mb-10">
-            <BannerCarousel banners={banners} />
-          </div>
-        )}
+
 
         <div className="space-y-6">
           {products.map((product) => (
