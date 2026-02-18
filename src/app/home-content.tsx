@@ -86,7 +86,7 @@ export default function HomeContent() {
   };
 
   const handleLogin = () => {
-    window.location.href = '/api/auth/google';
+    window.location.href = '/login';
   };
 
   const isProductOwned = (productId: string) => {
@@ -149,7 +149,7 @@ export default function HomeContent() {
                 </button>
               ) : (
                 <Button variant="primary" size="sm" onClick={handleLogin} className="shadow-lg shadow-blue-500/20">
-                  <LogIn className="w-4 h-4" /> Entrar com Google
+                  <LogIn className="w-4 h-4" /> Entrar
                 </Button>
               )
             )}

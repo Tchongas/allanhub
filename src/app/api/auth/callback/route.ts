@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createSupabaseServer } from '@/lib/supabase/server';
-import { createServiceRoleClient } from '@/lib/supabase/server';
 import { cookies } from 'next/headers';
+import { ensureHubUserForAuthUser } from '@/lib/hub-user';
 
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
@@ -13,25 +13,7 @@ export async function GET(request: NextRequest) {
     const { data, error } = await supabase.auth.exchangeCodeForSession(code);
 
     if (!error && data.session) {
-      const serviceClient = createServiceRoleClient();
-      
-      const { data: existingUser } = await serviceClient
-        .from('hub_users')
-        .select('*')
-        .eq('id', data.user.id)
-        .single();
-
-      if (!existingUser) {
-        await serviceClient
-          .from('hub_users')
-          .insert({
-            id: data.user.id,
-            email: data.user.email,
-            name: data.user.user_metadata?.full_name || 
-                  data.user.user_metadata?.name || 
-                  data.user.email?.split('@')[0],
-          });
-      }
+      await ensureHubUserForAuthUser(data.user);
 
       const cookieStore = await cookies();
       cookieStore.set('hub_session', data.session.access_token, {

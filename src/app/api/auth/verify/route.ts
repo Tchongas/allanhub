@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { createServiceRoleClient } from '@/lib/supabase/server';
 import { getUserProducts } from '@/lib/supabase/db';
 import { cookies } from 'next/headers';
+import { ensureHubUserForAuthUser } from '@/lib/hub-user';
 
 export async function GET() {
   try {
@@ -20,21 +21,12 @@ export async function GET() {
       return NextResponse.json({ authenticated: false });
     }
 
-    const { data: user } = await supabase
-      .from('hub_users')
-      .select('*')
-      .eq('id', authUser.id)
-      .single();
-
-    const products = await getUserProducts(authUser.id);
+    const hubUser = await ensureHubUserForAuthUser(authUser);
+    const products = await getUserProducts(hubUser.id);
 
     return NextResponse.json({
       authenticated: true,
-      user: user || {
-        id: authUser.id,
-        email: authUser.email,
-        name: authUser.user_metadata?.name || authUser.email?.split('@')[0],
-      },
+      user: hubUser,
       products,
     });
   } catch (error) {

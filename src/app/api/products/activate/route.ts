@@ -3,6 +3,7 @@ import { validateActivationCode, activateProduct, getActiveUserProduct } from '@
 import { getProduct } from '@/lib/products';
 import { cookies } from 'next/headers';
 import { createServiceRoleClient } from '@/lib/supabase/server';
+import { ensureHubUserForAuthUser } from '@/lib/hub-user';
 
 export async function POST(request: NextRequest) {
   try {
@@ -25,6 +26,8 @@ export async function POST(request: NextRequest) {
         { status: 401 }
       );
     }
+
+    const hubUser = await ensureHubUserForAuthUser(user);
 
     const { code } = await request.json();
 
@@ -53,7 +56,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if user already owns this product
-    const existingProduct = await getActiveUserProduct(user.id, activationCode.product_id);
+    const existingProduct = await getActiveUserProduct(hubUser.id, activationCode.product_id);
     if (existingProduct) {
       return NextResponse.json(
         { error: 'already_owned', product: { id: product.id, name: product.name, expires_at: existingProduct.expires_at } },
@@ -62,7 +65,7 @@ export async function POST(request: NextRequest) {
     }
 
     const userProduct = await activateProduct(
-      user.id,
+      hubUser.id,
       code,
       activationCode.product_id,
       product.duration_months,

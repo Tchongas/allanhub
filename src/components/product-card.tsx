@@ -171,8 +171,8 @@ export function ProductCard({
                 <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
                   <span className="text-sm text-slate-400">Faça login para ativar seu código</span>
                   <div className="flex gap-3">
-                    <Button variant="primary" onClick={() => window.location.href = '/api/auth/google'} className="shadow-lg shadow-blue-500/25">
-                      <LogIn className="w-4 h-4" /> Entrar com Google
+                    <Button variant="primary" onClick={() => window.location.href = '/login'} className="shadow-lg shadow-blue-500/25">
+                      <LogIn className="w-4 h-4" /> Entrar
                     </Button>
                     {product.shop_link && (
                       <a href={product.shop_link} target="_blank" rel="noopener noreferrer">

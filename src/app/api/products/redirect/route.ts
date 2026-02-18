@@ -4,6 +4,7 @@ import { getProduct } from '@/lib/products';
 import { generateProductToken, generateNonce } from '@/lib/jwt';
 import { cookies } from 'next/headers';
 import { createServiceRoleClient } from '@/lib/supabase/server';
+import { ensureHubUserForAuthUser } from '@/lib/hub-user';
 
 export async function GET(request: NextRequest) {
   try {
@@ -30,6 +31,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(new URL('/login', request.url));
     }
 
+    const hubUser = await ensureHubUserForAuthUser(user);
+
     const product = await getProduct(productId);
     if (!product) {
       return NextResponse.json(
@@ -38,19 +41,13 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const userProduct = await getActiveUserProduct(user.id, productId);
+    const userProduct = await getActiveUserProduct(hubUser.id, productId);
     if (!userProduct) {
       return NextResponse.redirect(new URL(`/?error=no_access&product=${productId}`, request.url));
     }
 
-    const { data: hubUser } = await supabase
-      .from('hub_users')
-      .select('*')
-      .eq('id', user.id)
-      .single();
-
     const token = await generateProductToken({
-      sub: user.id,
+      sub: hubUser.id,
       email: user.email!,
       name: hubUser?.name || user.user_metadata?.name,
       product: productId,
