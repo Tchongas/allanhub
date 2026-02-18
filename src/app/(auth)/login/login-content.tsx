@@ -188,12 +188,6 @@ export default function LoginContent() {
             </button>
           </div>
 
-          {mode === 'register' && (
-            <div className="mb-4 rounded-lg border border-amber-700/60 bg-amber-950/30 px-3 py-2 text-xs text-amber-200">
-              Se este email já foi usado com Google, você verá um erro e deverá entrar com Google.
-            </div>
-          )}
-
           <form className="space-y-3" onSubmit={handleEmailSubmit}>
             {mode === 'register' && (
               <div>
