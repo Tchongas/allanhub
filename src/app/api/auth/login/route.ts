@@ -8,6 +8,20 @@ function safeRedirectPath(redirectTo?: string): string {
   return redirectTo.startsWith('/') ? redirectTo : '/';
 }
 
+function mapLoginError(message?: string): string {
+  const normalized = (message || '').toLowerCase();
+
+  if (normalized.includes('email not confirmed')) {
+    return 'Confirme seu email antes de entrar.';
+  }
+
+  if (normalized.includes('invalid login credentials')) {
+    return 'Email ou senha inválidos. Se sua conta foi criada com Google, clique em "Continuar com Google".';
+  }
+
+  return 'Email ou senha inválidos';
+}
+
 export async function POST(request: NextRequest) {
   try {
     const { email, password, redirect_to } = await request.json();
@@ -23,7 +37,7 @@ export async function POST(request: NextRequest) {
     });
 
     if (error || !data.user || !data.session) {
-      return NextResponse.json({ error: 'Email ou senha inválidos' }, { status: 401 });
+      return NextResponse.json({ error: mapLoginError(error?.message) }, { status: 401 });
     }
 
     await ensureHubUserForAuthUser(data.user);

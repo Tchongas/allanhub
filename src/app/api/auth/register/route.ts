@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { createSupabaseServer } from '@/lib/supabase/server';
+import { createServiceRoleClient } from '@/lib/supabase/server';
 import { ensureHubUserForAuthUser } from '@/lib/hub-user';
 
 function safeRedirectPath(redirectTo?: string): string {
@@ -21,8 +22,29 @@ export async function POST(request: NextRequest) {
     }
 
     const supabase = await createSupabaseServer();
+    const serviceRole = createServiceRoleClient();
     const normalizedEmail = String(email).trim().toLowerCase();
     const normalizedName = String(name || '').trim();
+
+    const { data: existingHubUsers, error: existingHubUsersError } = await serviceRole
+      .from('hub_users')
+      .select('id')
+      .ilike('email', normalizedEmail)
+      .limit(1);
+
+    if (existingHubUsersError) {
+      throw new Error(`Failed to verify existing email: ${existingHubUsersError.message}`);
+    }
+
+    if (existingHubUsers && existingHubUsers.length > 0) {
+      return NextResponse.json(
+        {
+          error:
+            'Este email já está em uso. Se sua conta foi criada com Google, clique em "Continuar com Google".',
+        },
+        { status: 409 }
+      );
+    }
 
     const { data, error } = await supabase.auth.signUp({
       email: normalizedEmail,
@@ -37,9 +59,27 @@ export async function POST(request: NextRequest) {
 
     if (error) {
       if (error.message.toLowerCase().includes('already')) {
-        return NextResponse.json({ error: 'Já existe uma conta com este email' }, { status: 409 });
+        return NextResponse.json(
+          {
+            error:
+              'Este email já está em uso. Se sua conta foi criada com Google, clique em "Continuar com Google".',
+          },
+          { status: 409 }
+        );
       }
       return NextResponse.json({ error: error.message || 'Erro ao criar conta' }, { status: 400 });
+    }
+
+    // Supabase may return a masked user without identities for already-registered emails
+    // when anti-enumeration protections are enabled.
+    if (data.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) {
+      return NextResponse.json(
+        {
+          error:
+            'Este email já está em uso. Se sua conta foi criada com Google, clique em "Continuar com Google".',
+        },
+        { status: 409 }
+      );
     }
 
     if (data.user) {

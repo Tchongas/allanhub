@@ -42,6 +42,7 @@ export default function LoginContent() {
 
   const error = searchParams.get('error');
   const redirectTo = searchParams.get('redirect_to');
+  const isBusy = isLoadingGoogle || isSubmittingEmail;
 
   const handleGoogleLogin = () => {
     setIsLoadingGoogle(true);
@@ -129,6 +130,35 @@ export default function LoginContent() {
             </div>
           )}
 
+          <Button
+            onClick={handleGoogleLogin}
+            variant="default"
+            className="w-full h-12 flex items-center justify-center gap-3 bg-white text-slate-900 hover:bg-slate-100 border border-slate-200 shadow-md"
+            disabled={isBusy}
+          >
+            {isLoadingGoogle ? (
+              <>
+                <Loader2 className="w-5 h-5 animate-spin" />
+                Redirecionando para Google...
+              </>
+            ) : (
+              <>
+                <GoogleIcon className="w-5 h-5 text-[#4285F4]" />
+                Continuar com Google
+              </>
+            )}
+          </Button>
+
+          <p className="mt-2 mb-4 text-center text-xs text-slate-400">
+            Recomendado para contas já existentes e acesso mais rápido.
+          </p>
+
+          <div className="my-5 flex items-center gap-3 text-xs text-slate-500">
+            <div className="h-px flex-1 bg-slate-700" />
+            <span>ou use email e senha</span>
+            <div className="h-px flex-1 bg-slate-700" />
+          </div>
+
           <div className="mb-4 flex rounded-lg border border-slate-700 bg-slate-900/60 p-1">
             <button
               type="button"
@@ -157,6 +187,12 @@ export default function LoginContent() {
               Criar Conta
             </button>
           </div>
+
+          {mode === 'register' && (
+            <div className="mb-4 rounded-lg border border-amber-700/60 bg-amber-950/30 px-3 py-2 text-xs text-amber-200">
+              Se este email já foi usado com Google, você verá um erro e deverá entrar com Google.
+            </div>
+          )}
 
           <form className="space-y-3" onSubmit={handleEmailSubmit}>
             {mode === 'register' && (
@@ -223,7 +259,7 @@ export default function LoginContent() {
               type="submit"
               variant="primary"
               className="w-full"
-              disabled={isSubmittingEmail}
+              disabled={isBusy}
             >
               {isSubmittingEmail ? (
                 <>
@@ -233,31 +269,6 @@ export default function LoginContent() {
               ) : mode === 'login' ? 'Entrar com Email' : 'Criar conta com Email'}
             </Button>
           </form>
-
-          <div className="my-5 flex items-center gap-3 text-xs text-slate-500">
-            <div className="h-px flex-1 bg-slate-700" />
-            <span>ou</span>
-            <div className="h-px flex-1 bg-slate-700" />
-          </div>
-
-          <Button
-            onClick={handleGoogleLogin}
-            variant="outline"
-            className="w-full flex items-center justify-center gap-3"
-            disabled={isLoadingGoogle || isSubmittingEmail}
-          >
-            {isLoadingGoogle ? (
-              <>
-                <Loader2 className="w-5 h-5 animate-spin" />
-                Redirecionando...
-              </>
-            ) : (
-              <>
-                <GoogleIcon className="w-5 h-5" />
-                Continuar com Google
-              </>
-            )}
-          </Button>
 
           <div className="mt-6 text-center text-sm text-slate-500">
             Ao continuar, você concorda com nossos termos de uso.
