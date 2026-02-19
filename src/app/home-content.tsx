@@ -89,12 +89,16 @@ export default function HomeContent() {
     window.location.href = '/login';
   };
 
-  const isProductOwned = (productId: string) => {
+  const hasActiveAccess = (productId: string) => {
     return userProducts.some(p => 
       p.product_id === productId && 
       p.status === 'active' && 
       new Date(p.expires_at) > new Date()
     );
+  };
+
+  const isProductOwned = (productId: string) => {
+    return hasActiveAccess(productId);
   };
 
   const getProductDaysRemaining = (productId: string) => {
@@ -113,6 +117,12 @@ export default function HomeContent() {
     const product = products.find(p => p.id === productId);
     return product?.is_lifetime || (userProduct && getProductDaysRemaining(productId) > 36000);
   };
+
+  const sortedProducts = [...products].sort((a, b) => {
+    const aRank = hasActiveAccess(a.id) ? 0 : 1;
+    const bRank = hasActiveAccess(b.id) ? 0 : 1;
+    return aRank - bRank;
+  });
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-900 to-slate-800">
@@ -197,7 +207,7 @@ export default function HomeContent() {
 
 
         <div className="space-y-6">
-          {products.map((product) => (
+          {sortedProducts.map((product) => (
             <ProductCard
               key={product.id}
               product={product}
