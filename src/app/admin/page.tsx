@@ -31,7 +31,11 @@ import {
   Image,
   GripVertical,
   ExternalLink,
-  Link
+  Link,
+  Webhook,
+  RotateCcw,
+  CheckCircle2,
+  AlertTriangle
 } from 'lucide-react';
 import { Button, Input, Badge } from '@/components/ui';
 import { Product, ActivationCode, Banner } from '@/types';
@@ -55,6 +59,29 @@ interface AdminUser {
   products: AdminUserProduct[];
 }
 
+interface HotmartMapping {
+  id: number;
+  hotmart_product_ucode: string;
+  product_id: string;
+  active: boolean;
+  notes: string;
+  created_at: string;
+  updated_at: string;
+}
+
+interface HotmartEvent {
+  hotmart_event_id: string;
+  event_name: string;
+  version: string | null;
+  hottok_valid: boolean;
+  product_ucode: string | null;
+  buyer_email: string | null;
+  processing_status: 'received' | 'processed' | 'ignored' | 'failed';
+  processing_error: string | null;
+  processed_at: string | null;
+  received_at: string;
+}
+
 export default function AdminPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
@@ -69,11 +96,26 @@ export default function AdminPage() {
   const [expandedCodes, setExpandedCodes] = useState<Record<string, boolean>>({});
   const [generatingCodes, setGeneratingCodes] = useState<string | null>(null);
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'products' | 'banners' | 'users'>('products');
+  const [activeTab, setActiveTab] = useState<'products' | 'banners' | 'users' | 'hotmart'>('products');
   const [allUsers, setAllUsers] = useState<AdminUser[]>([]);
   const [usersLoading, setUsersLoading] = useState(false);
   const [userSearch, setUserSearch] = useState('');
   const [expandedUsers, setExpandedUsers] = useState<Record<string, boolean>>({});
+
+  // Hotmart state
+  const [hotmartMappings, setHotmartMappings] = useState<HotmartMapping[]>([]);
+  const [hotmartEvents, setHotmartEvents] = useState<HotmartEvent[]>([]);
+  const [hotmartLoading, setHotmartLoading] = useState(false);
+  const [hotmartSaving, setHotmartSaving] = useState(false);
+  const [retryingEventId, setRetryingEventId] = useState<string | null>(null);
+  const [editingMappingId, setEditingMappingId] = useState<number | null>(null);
+  const [eventStatusFilter, setEventStatusFilter] = useState<'all' | 'received' | 'processed' | 'ignored' | 'failed'>('all');
+  const [mappingForm, setMappingForm] = useState({
+    hotmart_product_ucode: '',
+    product_id: '',
+    active: true,
+    notes: '',
+  });
 
   // Banner state
   const [allBanners, setAllBanners] = useState<Banner[]>([]);
@@ -192,6 +234,157 @@ export default function AdminPage() {
     } catch (err) {
       setError('Erro ao carregar produtos');
     }
+  }
+
+  async function loadHotmartMappings() {
+    const res = await fetch('/api/admin/hotmart/mappings');
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.error || 'Erro ao carregar mapeamentos Hotmart');
+    }
+    setHotmartMappings(data.mappings || []);
+  }
+
+  async function loadHotmartEvents(status: 'all' | 'received' | 'processed' | 'ignored' | 'failed' = eventStatusFilter) {
+    const qs = new URLSearchParams();
+    qs.set('limit', '100');
+    if (status !== 'all') {
+      qs.set('status', status);
+    }
+
+    const res = await fetch(`/api/admin/hotmart/events?${qs.toString()}`);
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.error || 'Erro ao carregar eventos Hotmart');
+    }
+    setHotmartEvents(data.events || []);
+  }
+
+  async function loadHotmartData(status: 'all' | 'received' | 'processed' | 'ignored' | 'failed' = eventStatusFilter) {
+    setHotmartLoading(true);
+    try {
+      await Promise.all([loadHotmartMappings(), loadHotmartEvents(status)]);
+    } catch (err: any) {
+      setError(err.message || 'Erro ao carregar dados do Hotmart');
+    } finally {
+      setHotmartLoading(false);
+    }
+  }
+
+  function startCreateMapping() {
+    const firstProductId = products[0]?.id || '';
+    setEditingMappingId(null);
+    setMappingForm({
+      hotmart_product_ucode: '',
+      product_id: firstProductId,
+      active: true,
+      notes: '',
+    });
+    setError(null);
+    setSuccess(null);
+  }
+
+  function startEditMapping(mapping: HotmartMapping) {
+    setEditingMappingId(mapping.id);
+    setMappingForm({
+      hotmart_product_ucode: mapping.hotmart_product_ucode,
+      product_id: mapping.product_id,
+      active: mapping.active,
+      notes: mapping.notes || '',
+    });
+    setError(null);
+    setSuccess(null);
+  }
+
+  async function saveMapping() {
+    if (!mappingForm.hotmart_product_ucode || !mappingForm.product_id) {
+      setError('Hotmart UCode e Produto são obrigatórios');
+      return;
+    }
+
+    setHotmartSaving(true);
+    setError(null);
+    setSuccess(null);
+
+    try {
+      const method = editingMappingId ? 'PUT' : 'POST';
+      const body = editingMappingId
+        ? { id: editingMappingId, ...mappingForm }
+        : mappingForm;
+
+      const res = await fetch('/api/admin/hotmart/mappings', {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Erro ao salvar mapeamento');
+      }
+
+      setSuccess(editingMappingId ? 'Mapeamento atualizado com sucesso!' : 'Mapeamento criado com sucesso!');
+      startCreateMapping();
+      await loadHotmartMappings();
+    } catch (err: any) {
+      setError(err.message || 'Erro ao salvar mapeamento');
+    } finally {
+      setHotmartSaving(false);
+    }
+  }
+
+  async function deleteMapping(mappingId: number) {
+    if (!confirm('Tem certeza que deseja excluir este mapeamento Hotmart?')) return;
+
+    try {
+      const res = await fetch(`/api/admin/hotmart/mappings?id=${mappingId}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Erro ao excluir mapeamento');
+      }
+
+      if (editingMappingId === mappingId) {
+        startCreateMapping();
+      }
+
+      setSuccess('Mapeamento removido com sucesso!');
+      await loadHotmartMappings();
+    } catch (err: any) {
+      setError(err.message || 'Erro ao excluir mapeamento');
+    }
+  }
+
+  async function retryHotmartEvent(eventId: string) {
+    setRetryingEventId(eventId);
+    setError(null);
+    setSuccess(null);
+
+    try {
+      const res = await fetch('/api/admin/hotmart/events/retry', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ event_id: eventId }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Erro ao reprocessar evento');
+      }
+
+      setSuccess(`Evento ${eventId} reprocessado (${data.status || 'ok'}).`);
+      await loadHotmartEvents(eventStatusFilter);
+    } catch (err: any) {
+      setError(err.message || 'Erro ao reprocessar evento Hotmart');
+    } finally {
+      setRetryingEventId(null);
+    }
+  }
+
+  function getEventBadgeVariant(status: HotmartEvent['processing_status']): 'default' | 'secondary' | 'success' | 'error' {
+    if (status === 'processed') return 'success';
+    if (status === 'failed') return 'error';
+    if (status === 'ignored') return 'secondary';
+    return 'default';
   }
 
   async function loadUsers() {
@@ -498,6 +691,11 @@ export default function AdminPage() {
                 <Plus className="w-4 h-4" /> Novo Banner
               </Button>
             )}
+            {activeTab === 'hotmart' && (
+              <Button variant="primary" onClick={startCreateMapping}>
+                <Plus className="w-4 h-4" /> Novo Mapeamento
+              </Button>
+            )}
           </div>
           {/* Tabs */}
           <div className="flex gap-1">
@@ -536,6 +734,22 @@ export default function AdminPage() {
               }`}
             >
               <Users className="w-4 h-4" /> Usuários
+            </button>
+            <button
+              onClick={() => {
+                setActiveTab('hotmart');
+                if (hotmartMappings.length === 0 && hotmartEvents.length === 0) {
+                  startCreateMapping();
+                  loadHotmartData('all');
+                }
+              }}
+              className={`px-4 py-2.5 text-sm font-medium rounded-t-lg transition-colors flex items-center gap-2 ${
+                activeTab === 'hotmart'
+                  ? 'bg-slate-900 text-white border-t border-x border-slate-700'
+                  : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
+              }`}
+            >
+              <Webhook className="w-4 h-4" /> Hotmart
             </button>
           </div>
         </div>
@@ -1254,6 +1468,190 @@ export default function AdminPage() {
               <Button variant="ghost" onClick={loadUsers} disabled={usersLoading}>
                 <RefreshCw className={`w-4 h-4 ${usersLoading ? 'animate-spin' : ''}`} /> Atualizar lista
               </Button>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'hotmart' && (
+          <div className="space-y-6">
+            <div className="bg-slate-800/40 border border-slate-700 rounded-xl p-4">
+              <h2 className="text-white font-semibold mb-1 flex items-center gap-2">
+                <ShieldCheck className="w-4 h-4 text-emerald-400" /> Segurança & Operação
+              </h2>
+              <p className="text-sm text-slate-400">
+                Esta área já é protegida por sessão e validação de admin no backend. Todos os endpoints abaixo exigem usuário admin.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+              <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-5">
+                <h3 className="text-white font-semibold mb-4">Mapeamento UCode → Produto</h3>
+
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-sm text-slate-400 mb-1">Hotmart Product UCode</label>
+                    <Input
+                      value={mappingForm.hotmart_product_ucode}
+                      onChange={(e) => setMappingForm({ ...mappingForm, hotmart_product_ucode: e.target.value })}
+                      placeholder="abc123-ucode"
+                      className="bg-slate-900/50 border-slate-600 text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm text-slate-400 mb-1">Produto no Hub</label>
+                    <select
+                      value={mappingForm.product_id}
+                      onChange={(e) => setMappingForm({ ...mappingForm, product_id: e.target.value })}
+                      className="w-full h-11 px-4 bg-slate-900/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="">Selecione um produto...</option>
+                      {products.map((product) => (
+                        <option key={product.id} value={product.id}>{product.name} ({product.id})</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm text-slate-400 mb-1">Notas (opcional)</label>
+                    <Input
+                      value={mappingForm.notes}
+                      onChange={(e) => setMappingForm({ ...mappingForm, notes: e.target.value })}
+                      placeholder="Oferta principal, funil A..."
+                      className="bg-slate-900/50 border-slate-600 text-white"
+                    />
+                  </div>
+                  <label className="flex items-center gap-2 text-sm text-slate-300">
+                    <input
+                      type="checkbox"
+                      checked={mappingForm.active}
+                      onChange={(e) => setMappingForm({ ...mappingForm, active: e.target.checked })}
+                      className="w-5 h-5 rounded border-slate-600 bg-slate-900/50 text-blue-600 focus:ring-blue-500"
+                    />
+                    Mapeamento ativo
+                  </label>
+                </div>
+
+                <div className="mt-4 flex gap-2">
+                  <Button variant="primary" onClick={saveMapping} disabled={hotmartSaving}>
+                    {hotmartSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                    {editingMappingId ? 'Atualizar' : 'Salvar'}
+                  </Button>
+                  <Button variant="ghost" onClick={startCreateMapping}>
+                    <X className="w-4 h-4" /> Limpar
+                  </Button>
+                </div>
+
+                <div className="mt-6 space-y-2 max-h-[380px] overflow-auto pr-1">
+                  {hotmartMappings.length === 0 ? (
+                    <p className="text-sm text-slate-500">Nenhum mapeamento cadastrado.</p>
+                  ) : hotmartMappings.map((mapping) => (
+                    <div key={mapping.id} className="bg-slate-900/50 border border-slate-700 rounded-lg p-3">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="text-sm text-white font-medium break-all">{mapping.hotmart_product_ucode}</p>
+                          <p className="text-xs text-slate-400 mt-1">Produto: <code>{mapping.product_id}</code></p>
+                          {mapping.notes && <p className="text-xs text-slate-500 mt-1">{mapping.notes}</p>}
+                          <div className="mt-2">
+                            <Badge variant={mapping.active ? 'success' : 'secondary'}>
+                              {mapping.active ? 'Ativo' : 'Inativo'}
+                            </Badge>
+                          </div>
+                        </div>
+                        <div className="flex gap-1">
+                          <Button variant="ghost" size="icon" onClick={() => startEditMapping(mapping)}>
+                            <Pencil className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="text-red-400 hover:text-red-300 hover:bg-red-900/20"
+                            onClick={() => deleteMapping(mapping.id)}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-5">
+                <div className="flex items-center justify-between gap-3 mb-4">
+                  <h3 className="text-white font-semibold">Eventos de Webhook</h3>
+                  <div className="flex gap-2">
+                    <select
+                      value={eventStatusFilter}
+                      onChange={(e) => {
+                        const value = e.target.value as 'all' | 'received' | 'processed' | 'ignored' | 'failed';
+                        setEventStatusFilter(value);
+                        loadHotmartEvents(value);
+                      }}
+                      className="h-9 px-3 bg-slate-900/50 border border-slate-600 rounded-lg text-sm text-white"
+                    >
+                      <option value="all">Todos</option>
+                      <option value="failed">Falhos</option>
+                      <option value="received">Recebidos</option>
+                      <option value="processed">Processados</option>
+                      <option value="ignored">Ignorados</option>
+                    </select>
+                    <Button variant="ghost" onClick={() => loadHotmartData(eventStatusFilter)} disabled={hotmartLoading}>
+                      <RefreshCw className={`w-4 h-4 ${hotmartLoading ? 'animate-spin' : ''}`} /> Atualizar
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="space-y-2 max-h-[520px] overflow-auto pr-1">
+                  {hotmartEvents.length === 0 ? (
+                    <p className="text-sm text-slate-500">Nenhum evento encontrado.</p>
+                  ) : hotmartEvents.map((event) => (
+                    <div key={event.hotmart_event_id} className="bg-slate-900/50 border border-slate-700 rounded-lg p-3">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <p className="text-sm text-white font-medium">{event.event_name}</p>
+                            <Badge variant={getEventBadgeVariant(event.processing_status)}>{event.processing_status}</Badge>
+                            {!event.hottok_valid && (
+                              <Badge variant="error" className="flex items-center gap-1">
+                                <AlertTriangle className="w-3 h-3" /> token inválido
+                              </Badge>
+                            )}
+                          </div>
+                          <p className="text-xs text-slate-500 mt-1 break-all">ID: {event.hotmart_event_id}</p>
+                          <div className="mt-1 text-xs text-slate-400 space-y-0.5">
+                            {event.product_ucode && <p>UCode: <code>{event.product_ucode}</code></p>}
+                            {event.buyer_email && <p>Email: {event.buyer_email}</p>}
+                            <p>Recebido: {formatDate(event.received_at)}</p>
+                          </div>
+                          {event.processing_error && (
+                            <p className="text-xs text-red-300 mt-2 break-words">Erro: {event.processing_error}</p>
+                          )}
+                        </div>
+                        <div className="flex-shrink-0">
+                          {event.processing_status === 'failed' && event.hottok_valid ? (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => retryHotmartEvent(event.hotmart_event_id)}
+                              disabled={retryingEventId === event.hotmart_event_id}
+                            >
+                              {retryingEventId === event.hotmart_event_id ? (
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                              ) : (
+                                <RotateCcw className="w-4 h-4" />
+                              )}
+                              Retry
+                            </Button>
+                          ) : event.processing_status === 'processed' ? (
+                            <span className="text-emerald-400 text-xs inline-flex items-center gap-1">
+                              <CheckCircle2 className="w-3.5 h-3.5" /> OK
+                            </span>
+                          ) : null}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         )}

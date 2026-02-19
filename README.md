@@ -54,6 +54,7 @@ Preencha:
 - `SUPABASE_SERVICE_ROLE_KEY`
 - `JWT_SECRET` (mesmo secret usado nos produtos)
 - `FESTA_MAGICA_URL` (URL do Festa Mágica)
+- `HOTMART_HOTTOK` (token enviado no header `X-HOTMART-HOTTOK`)
 
 ### 4. Gerar códigos de ativação
 
@@ -111,6 +112,43 @@ src/
 | `/api/auth/logout` | POST | Logout |
 | `/api/products/activate` | POST | Ativar código |
 | `/api/products/redirect` | GET | Redirecionar para produto |
+| `/api/webhooks/hotmart` | POST | Receber eventos de compra Hotmart |
+| `/api/admin/hotmart/mappings` | GET/POST/PUT/DELETE | Gerenciar mapeamento Hotmart `product.ucode` -> `products.id` |
+
+## Integração Hotmart (Webhook) - Scaffold
+
+### Migração
+
+Execute no Supabase:
+
+- `supabase/migrations/003_hotmart_webhook_scaffold.sql`
+
+Essa migração cria:
+
+- `hotmart_product_mappings`
+- `hotmart_webhook_events`
+- `hotmart_grants`
+
+### Fluxo automático implementado
+
+1. Hotmart envia evento para `/api/webhooks/hotmart`
+2. Hub valida `X-HOTMART-HOTTOK`
+3. Hub grava payload bruto em `hotmart_webhook_events` (idempotência por `hotmart_event_id`)
+4. Hub resolve o produto por `data.product.ucode` em `hotmart_product_mappings`
+5. Hub encontra/cria usuário por email do comprador (`data.buyer.email`)
+6. Hub concede ou revoga acesso no `user_products` conforme evento
+
+### Eventos considerados no scaffold
+
+- Concede acesso: `PURCHASE_APPROVED`, `PURCHASE_COMPLETE`
+- Revoga acesso: `PURCHASE_CANCELED`, `PURCHASE_REFUNDED`, `PURCHASE_CHARGEBACK`, `PURCHASE_EXPIRED`
+- Ignora (sem mudança de acesso): `PURCHASE_DELAYED`, `PURCHASE_BILLET_PRINTED`, `PURCHASE_PROTEST`
+
+### Importante para produção
+
+- Configure mapeamentos de produto antes de ativar o webhook no Hotmart.
+- Use HTTPS e monitore a tabela `hotmart_webhook_events` para falhas.
+- Eventos desconhecidos ficam como `ignored` (não quebram o endpoint).
 
 ## Painel Admin
 
