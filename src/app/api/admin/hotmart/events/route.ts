@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
 
     let query = supabase
       .from('hotmart_webhook_events')
-      .select('hotmart_event_id, event_name, version, hottok_valid, product_ucode, buyer_email, processing_status, processing_error, processed_at, received_at')
+      .select('hotmart_event_id, event_name, version, hottok_valid, product_ucode, buyer_email, payload, processing_status, processing_error, processed_at, received_at')
       .order('received_at', { ascending: false })
       .limit(limit);
 

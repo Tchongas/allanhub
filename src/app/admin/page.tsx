@@ -80,6 +80,13 @@ interface HotmartEvent {
   processing_error: string | null;
   processed_at: string | null;
   received_at: string;
+  payload?: {
+    data?: {
+      product?: {
+        name?: string;
+      };
+    };
+  };
 }
 
 export default function AdminPage() {
@@ -385,6 +392,19 @@ export default function AdminPage() {
     if (status === 'failed') return 'error';
     if (status === 'ignored') return 'secondary';
     return 'default';
+  }
+
+  function getMappedProductLabel(productUcode: string | null): string | null {
+    if (!productUcode) return null;
+    const mapping = hotmartMappings.find((m) => m.hotmart_product_ucode === productUcode);
+    if (!mapping) return null;
+
+    const product = products.find((p) => p.id === mapping.product_id);
+    if (product) {
+      return `${product.name} (${product.id})`;
+    }
+
+    return mapping.product_id;
   }
 
   async function loadUsers() {
@@ -1603,53 +1623,60 @@ export default function AdminPage() {
                 <div className="space-y-2 max-h-[520px] overflow-auto pr-1">
                   {hotmartEvents.length === 0 ? (
                     <p className="text-sm text-slate-500">Nenhum evento encontrado.</p>
-                  ) : hotmartEvents.map((event) => (
-                    <div key={event.hotmart_event_id} className="bg-slate-900/50 border border-slate-700 rounded-lg p-3">
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="min-w-0">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <p className="text-sm text-white font-medium">{event.event_name}</p>
-                            <Badge variant={getEventBadgeVariant(event.processing_status)}>{event.processing_status}</Badge>
-                            {!event.hottok_valid && (
-                              <Badge variant="error" className="flex items-center gap-1">
-                                <AlertTriangle className="w-3 h-3" /> token inválido
-                              </Badge>
+                  ) : hotmartEvents.map((event) => {
+                    const mappedProductLabel = getMappedProductLabel(event.product_ucode);
+                    const hotmartProductName = event.payload?.data?.product?.name?.trim() || null;
+
+                    return (
+                      <div key={event.hotmart_event_id} className="bg-slate-900/50 border border-slate-700 rounded-lg p-3">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <p className="text-sm text-white font-medium">{event.event_name}</p>
+                              <Badge variant={getEventBadgeVariant(event.processing_status)}>{event.processing_status}</Badge>
+                              {!event.hottok_valid && (
+                                <Badge variant="error" className="flex items-center gap-1">
+                                  <AlertTriangle className="w-3 h-3" /> token inválido
+                                </Badge>
+                              )}
+                            </div>
+                            <p className="text-xs text-slate-500 mt-1 break-all">ID: {event.hotmart_event_id}</p>
+                            <div className="mt-1 text-xs text-slate-400 space-y-0.5">
+                              {event.product_ucode && <p>UCode: <code>{event.product_ucode}</code></p>}
+                              {hotmartProductName && <p>Produto Hotmart: <span className="text-slate-300">{hotmartProductName}</span></p>}
+                              {mappedProductLabel && <p>Mapeado no Hub: <span className="text-emerald-300">{mappedProductLabel}</span></p>}
+                              {event.buyer_email && <p>Email: {event.buyer_email}</p>}
+                              <p>Recebido: {formatDate(event.received_at)}</p>
+                            </div>
+                            {event.processing_error && (
+                              <p className="text-xs text-red-300 mt-2 break-words">Erro: {event.processing_error}</p>
                             )}
                           </div>
-                          <p className="text-xs text-slate-500 mt-1 break-all">ID: {event.hotmart_event_id}</p>
-                          <div className="mt-1 text-xs text-slate-400 space-y-0.5">
-                            {event.product_ucode && <p>UCode: <code>{event.product_ucode}</code></p>}
-                            {event.buyer_email && <p>Email: {event.buyer_email}</p>}
-                            <p>Recebido: {formatDate(event.received_at)}</p>
+                          <div className="flex-shrink-0">
+                            {event.processing_status === 'failed' && event.hottok_valid ? (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => retryHotmartEvent(event.hotmart_event_id)}
+                                disabled={retryingEventId === event.hotmart_event_id}
+                              >
+                                {retryingEventId === event.hotmart_event_id ? (
+                                  <Loader2 className="w-4 h-4 animate-spin" />
+                                ) : (
+                                  <RotateCcw className="w-4 h-4" />
+                                )}
+                                Retry
+                              </Button>
+                            ) : event.processing_status === 'processed' ? (
+                              <span className="text-emerald-400 text-xs inline-flex items-center gap-1">
+                                <CheckCircle2 className="w-3.5 h-3.5" /> OK
+                              </span>
+                            ) : null}
                           </div>
-                          {event.processing_error && (
-                            <p className="text-xs text-red-300 mt-2 break-words">Erro: {event.processing_error}</p>
-                          )}
-                        </div>
-                        <div className="flex-shrink-0">
-                          {event.processing_status === 'failed' && event.hottok_valid ? (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => retryHotmartEvent(event.hotmart_event_id)}
-                              disabled={retryingEventId === event.hotmart_event_id}
-                            >
-                              {retryingEventId === event.hotmart_event_id ? (
-                                <Loader2 className="w-4 h-4 animate-spin" />
-                              ) : (
-                                <RotateCcw className="w-4 h-4" />
-                              )}
-                              Retry
-                            </Button>
-                          ) : event.processing_status === 'processed' ? (
-                            <span className="text-emerald-400 text-xs inline-flex items-center gap-1">
-                              <CheckCircle2 className="w-3.5 h-3.5" /> OK
-                            </span>
-                          ) : null}
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             </div>
