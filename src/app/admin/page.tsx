@@ -51,12 +51,31 @@ interface AdminUserProduct {
   is_lifetime?: boolean;
 }
 
+const USERS_PAGE_SIZE = 300;
+const DEFAULT_USERS_PAGINATION: UsersPagination = {
+  page: 1,
+  limit: USERS_PAGE_SIZE,
+  total: 0,
+  total_pages: 1,
+  has_previous_page: false,
+  has_next_page: false,
+};
+
 interface AdminUser {
   id: string;
   email: string;
   name: string;
   created_at: string;
   products: AdminUserProduct[];
+}
+
+interface UsersPagination {
+  page: number;
+  limit: number;
+  total: number;
+  total_pages: number;
+  has_previous_page: boolean;
+  has_next_page: boolean;
 }
 
 interface HotmartMapping {
@@ -108,6 +127,7 @@ export default function AdminPage() {
   const [usersLoading, setUsersLoading] = useState(false);
   const [userSearch, setUserSearch] = useState('');
   const [expandedUsers, setExpandedUsers] = useState<Record<string, boolean>>({});
+  const [usersPagination, setUsersPagination] = useState<UsersPagination>(DEFAULT_USERS_PAGINATION);
 
   // Hotmart state
   const [hotmartMappings, setHotmartMappings] = useState<HotmartMapping[]>([]);
@@ -407,13 +427,19 @@ export default function AdminPage() {
     return mapping.product_id;
   }
 
-  async function loadUsers() {
+  async function loadUsers(page: number = 1) {
     setUsersLoading(true);
     try {
-      const res = await fetch('/api/admin/users');
+      const qs = new URLSearchParams();
+      qs.set('page', String(page));
+      qs.set('limit', String(USERS_PAGE_SIZE));
+
+      const res = await fetch(`/api/admin/users?${qs.toString()}`);
       if (!res.ok) throw new Error('Failed to fetch users');
       const data = await res.json();
       setAllUsers(data.users || []);
+      setUsersPagination(data.pagination || DEFAULT_USERS_PAGINATION);
+      setExpandedUsers({});
     } catch (err) {
       setError('Erro ao carregar usuários');
     } finally {
@@ -682,6 +708,36 @@ export default function AdminPage() {
     return new Date(dateStr).getFullYear() > new Date().getFullYear() + 50;
   }
 
+  function renderUsersPaginationControls(position: 'top' | 'bottom') {
+    const isTop = position === 'top';
+
+    return (
+      <div className={`flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 ${isTop ? 'mb-4' : 'mt-6'}`}>
+        <p className="text-xs text-slate-500">
+          Página {usersPagination.page} de {usersPagination.total_pages} • {usersPagination.total} usuário{usersPagination.total !== 1 ? 's' : ''} no total
+        </p>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => loadUsers(usersPagination.page - 1)}
+            disabled={usersLoading || !usersPagination.has_previous_page}
+          >
+            Anterior
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => loadUsers(usersPagination.page + 1)}
+            disabled={usersLoading || !usersPagination.has_next_page}
+          >
+            Próxima
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-slate-900">
       <header className="bg-slate-800/50 border-b border-slate-700 sticky top-0 z-50 backdrop-blur-sm">
@@ -745,7 +801,7 @@ export default function AdminPage() {
             <button
               onClick={() => {
                 setActiveTab('users');
-                if (allUsers.length === 0) loadUsers();
+                if (allUsers.length === 0) loadUsers(1);
               }}
               className={`px-4 py-2.5 text-sm font-medium rounded-t-lg transition-colors flex items-center gap-2 ${
                 activeTab === 'users'
@@ -1394,8 +1450,9 @@ export default function AdminPage() {
               </div>
             ) : (
               <div className="space-y-3">
+                {renderUsersPaginationControls('top')}
                 <div className="text-sm text-slate-500 mb-4">
-                  {filteredUsers.length} usuário{filteredUsers.length !== 1 ? 's' : ''} encontrado{filteredUsers.length !== 1 ? 's' : ''}
+                  {filteredUsers.length} usuário{filteredUsers.length !== 1 ? 's' : ''} encontrado{filteredUsers.length !== 1 ? 's' : ''} nesta página
                 </div>
                 {filteredUsers.map((user) => (
                   <div
@@ -1480,12 +1537,13 @@ export default function AdminPage() {
                     )}
                   </div>
                 ))}
+                {renderUsersPaginationControls('bottom')}
               </div>
             )}
 
             {/* Refresh button */}
             <div className="mt-6 flex justify-center">
-              <Button variant="ghost" onClick={loadUsers} disabled={usersLoading}>
+              <Button variant="ghost" onClick={() => loadUsers(usersPagination.page)} disabled={usersLoading}>
                 <RefreshCw className={`w-4 h-4 ${usersLoading ? 'animate-spin' : ''}`} /> Atualizar lista
               </Button>
             </div>

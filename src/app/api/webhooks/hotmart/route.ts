@@ -3,6 +3,8 @@ import { createServiceRoleClient } from '@/lib/supabase/server';
 import { processHotmartWebhookEvent } from '@/lib/hotmart/processor';
 import type { HotmartWebhookPayload } from '@/lib/hotmart/types';
 
+const HOTMART_EVENT_RETENTION_DAYS = 7;
+
 function getHeaderToken(request: NextRequest): string {
   return request.headers.get('x-hotmart-hottok') || '';
 }
@@ -68,6 +70,21 @@ async function hasEventBeenProcessed(eventId: string): Promise<boolean> {
   return Boolean(data && data.length > 0 && data[0].processing_status === 'processed');
 }
 
+async function cleanupOldSuccessfulOrIgnoredEvents(): Promise<void> {
+  const supabase = createServiceRoleClient();
+  const cutoffDate = new Date(Date.now() - HOTMART_EVENT_RETENTION_DAYS * 24 * 60 * 60 * 1000).toISOString();
+
+  const { error } = await supabase
+    .from('hotmart_webhook_events')
+    .delete()
+    .in('processing_status', ['processed', 'ignored'])
+    .lt('received_at', cutoffDate);
+
+  if (error) {
+    throw new Error(`Failed to cleanup old Hotmart webhook events: ${error.message}`);
+  }
+}
+
 export async function POST(request: NextRequest) {
   let payload: HotmartWebhookPayload | null = null;
   let eventId = '';
@@ -82,6 +99,12 @@ export async function POST(request: NextRequest) {
   const hottokValid = isHottokValid(request);
 
   await saveEventReceipt(payload, hottokValid);
+
+  try {
+    await cleanupOldSuccessfulOrIgnoredEvents();
+  } catch (error) {
+    console.error('Hotmart webhook cleanup error:', error);
+  }
 
   if (!hottokValid) {
     await updateEventStatus(eventId, 'failed', 'Invalid or missing X-HOTMART-HOTTOK');

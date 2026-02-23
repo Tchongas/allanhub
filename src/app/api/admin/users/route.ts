@@ -3,6 +3,9 @@ import { cookies } from 'next/headers';
 import { createServiceRoleClient } from '@/lib/supabase/server';
 import { isAdmin } from '@/lib/admin';
 
+const DEFAULT_USERS_PAGE_SIZE = 300;
+const MAX_USERS_PAGE_SIZE = 300;
+
 async function verifyAdmin() {
   const cookieStore = await cookies();
   const sessionToken = cookieStore.get('hub_session')?.value;
@@ -25,25 +28,44 @@ export async function GET(request: NextRequest) {
 
   try {
     const supabase = createServiceRoleClient();
+    const { searchParams } = new URL(request.url);
+    const pageParam = Number(searchParams.get('page') || 1);
+    const limitParam = Number(searchParams.get('limit') || DEFAULT_USERS_PAGE_SIZE);
 
-    // Fetch all users
-    const { data: users, error: usersError } = await supabase
+    const page = Number.isFinite(pageParam) && pageParam > 0 ? Math.floor(pageParam) : 1;
+    const limit = Number.isFinite(limitParam)
+      ? Math.min(Math.max(Math.floor(limitParam), 1), MAX_USERS_PAGE_SIZE)
+      : DEFAULT_USERS_PAGE_SIZE;
+    const from = (page - 1) * limit;
+    const to = from + limit - 1;
+
+    // Fetch users page
+    const { data: users, error: usersError, count } = await supabase
       .from('hub_users')
-      .select('*')
-      .order('created_at', { ascending: false });
+      .select('id, email, name, created_at', { count: 'exact' })
+      .order('created_at', { ascending: false })
+      .range(from, to);
 
     if (usersError) {
       throw new Error(`Failed to fetch users: ${usersError.message}`);
     }
 
-    // Fetch all user_products with product info
-    const { data: userProducts, error: productsError } = await supabase
-      .from('user_products')
-      .select('*')
-      .order('activated_at', { ascending: false });
+    const userRows = users || [];
+    const userIds = userRows.map((user: { id: string }) => user.id);
 
-    if (productsError) {
-      throw new Error(`Failed to fetch user products: ${productsError.message}`);
+    let userProducts: any[] = [];
+    if (userIds.length > 0) {
+      const { data: pageUserProducts, error: productsError } = await supabase
+        .from('user_products')
+        .select('*')
+        .in('user_id', userIds)
+        .order('activated_at', { ascending: false });
+
+      if (productsError) {
+        throw new Error(`Failed to fetch user products: ${productsError.message}`);
+      }
+
+      userProducts = pageUserProducts || [];
     }
 
     // Fetch all products for name mapping
@@ -74,7 +96,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Combine users with their products
-    const usersWithProducts = (users || []).map((user: any) => ({
+    const usersWithProducts = userRows.map((user: any) => ({
       id: user.id,
       email: user.email,
       name: user.name,
@@ -82,7 +104,20 @@ export async function GET(request: NextRequest) {
       products: userProductsMap[user.id] || [],
     }));
 
-    return NextResponse.json({ users: usersWithProducts });
+    const total = typeof count === 'number' ? count : 0;
+    const totalPages = total > 0 ? Math.ceil(total / limit) : 1;
+
+    return NextResponse.json({
+      users: usersWithProducts,
+      pagination: {
+        page,
+        limit,
+        total,
+        total_pages: totalPages,
+        has_previous_page: page > 1,
+        has_next_page: page < totalPages,
+      },
+    });
   } catch (error) {
     console.error('Admin users GET error:', error);
     return NextResponse.json({ error: 'Erro ao buscar usuários' }, { status: 500 });
