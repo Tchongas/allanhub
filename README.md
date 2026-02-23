@@ -52,8 +52,10 @@ Preencha:
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 - `NEXT_PUBLIC_SITE_URL` (URL do Hub, ex: http://localhost:3001)
 - `SUPABASE_SERVICE_ROLE_KEY`
-- `JWT_SECRET` (mesmo secret usado nos produtos)
+- `JWT_SECRET` (compatível com fluxo legado; recomendado migrar para `HUB_JWT_SECRET`)
+- `HUB_JWT_SECRET` (secret compartilhado com Festa para validação do token de handoff)
 - `FESTA_MAGICA_URL` (URL do Festa Mágica)
+- `FESTA_CALLBACK_ALLOWLIST` (lista de callbacks permitidos, separados por vírgula)
 - `HOTMART_HOTTOK` (token enviado no header `X-HOTMART-HOTTOK`)
 
 ### 4. Gerar códigos de ativação
@@ -108,12 +110,36 @@ src/
 |----------|--------|-----------|
 | `/api/auth/google` | GET | Iniciar login com Google |
 | `/api/auth/callback` | GET | Callback do OAuth |
+| `/api/auth/festa-magica/start` | GET | Handoff OAuth + validação de acesso + redirect seguro para callback do Festa |
 | `/api/auth/verify` | GET | Verificar sessão |
 | `/api/auth/logout` | POST | Logout |
 | `/api/products/activate` | POST | Ativar código |
 | `/api/products/redirect` | GET | Redirecionar para produto |
 | `/api/webhooks/hotmart` | POST | Receber eventos de compra Hotmart |
 | `/api/admin/hotmart/mappings` | GET/POST/PUT/DELETE | Gerenciar mapeamento Hotmart `product.ucode` -> `products.id` |
+
+## Handoff seguro Hub -> Festa Mágica
+
+Entrada esperada:
+
+- `GET /api/auth/festa-magica/start?product=festa-magica&return_to=https://<FESTA_DOMAIN>/api/auth/callback&redirect_to=/criar`
+
+Regras de segurança aplicadas:
+
+- `product` deve ser `festa-magica`
+- `return_to` deve estar na allowlist (`FESTA_CALLBACK_ALLOWLIST` ou fallback para `FESTA_MAGICA_URL + /api/auth/callback`)
+- `redirect_to` opcional deve ser caminho relativo (nunca URL absoluta)
+- usuário precisa estar autenticado no Hub
+- usuário precisa ter acesso ativo ao produto `festa-magica`
+
+No sucesso:
+
+- Hub assina token HS256 (expiração de 5 minutos) e redireciona para:
+  - `{return_to}?token=<JWT>&redirect_to=/...`
+
+Na falha:
+
+- Hub redireciona para `/` com `?error=<codigo>&product=festa-magica`
 
 ## Integração Hotmart (Webhook) - Scaffold
 

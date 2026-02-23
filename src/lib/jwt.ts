@@ -1,8 +1,13 @@
 import { SignJWT, JWTPayload } from 'jose';
 
-const JWT_SECRET = new TextEncoder().encode(
-  process.env.SUPABASE_JWT_SECRET || 'your-secret-key-min-32-characters-long'
-);
+function getJwtSecret(): Uint8Array {
+  const secret = String(process.env.HUB_JWT_SECRET || process.env.JWT_SECRET || process.env.SUPABASE_JWT_SECRET || '').trim();
+  if (!secret) {
+    throw new Error('Missing JWT secret (set HUB_JWT_SECRET, JWT_SECRET, or SUPABASE_JWT_SECRET)');
+  }
+
+  return new TextEncoder().encode(secret);
+}
 
 export interface ProductTokenPayload {
   sub: string;
@@ -25,7 +30,7 @@ export async function generateProductToken(payload: ProductTokenPayload): Promis
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
     .setExpirationTime('5m')
-    .sign(JWT_SECRET);
+    .sign(getJwtSecret());
 
   return token;
 }
