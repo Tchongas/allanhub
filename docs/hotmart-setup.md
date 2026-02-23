@@ -112,3 +112,11 @@ In Hotmart webhook panel:
 - Grants access: `PURCHASE_APPROVED`, `PURCHASE_COMPLETE`
 - Revokes access: `PURCHASE_CANCELED`, `PURCHASE_REFUNDED`, `PURCHASE_CHARGEBACK`, `PURCHASE_EXPIRED`
 - Ignored (audit only): `PURCHASE_DELAYED`, `PURCHASE_BILLET_PRINTED`, `PURCHASE_PROTEST`
+
+## 11) Event retention (automatic cleanup)
+
+- On each webhook receipt, Hub runs a retention cleanup in `hotmart_webhook_events`.
+- Deletes only events older than **7 days** with status:
+  - `processed`
+  - `ignored`
+- Keeps `failed` events for manual investigation/retry.
