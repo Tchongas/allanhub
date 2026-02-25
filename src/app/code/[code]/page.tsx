@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { CheckCircle, XCircle, Loader2, LogIn, KeyRound, Sparkles, ArrowRight, Home } from 'lucide-react';
+import { CheckCircle, X, XCircle, Loader2, LogIn, KeyRound, Sparkles, ArrowRight, Home } from 'lucide-react';
 import { Button, Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui';
 
 type ActivationState = 
@@ -31,6 +31,10 @@ export default function CodeActivationPage() {
   const [product, setProduct] = useState<ProductInfo | null>(null);
   const [errorMessage, setErrorMessage] = useState('');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  const closeAlreadyOwnedPopup = () => {
+    router.push('/');
+  };
 
   // Step 1: Check if user is logged in and validate the code
   useEffect(() => {
@@ -245,56 +249,42 @@ export default function CodeActivationPage() {
 
       {/* Already Owned */}
       {state === 'already_owned' && (
-        <Card className="w-full max-w-md">
-          <CardHeader className="text-center">
-            <div className="mx-auto bg-blue-600/20 p-4 rounded-2xl w-fit mb-2">
-              <CheckCircle className="w-10 h-10 text-blue-400" />
-            </div>
-            <CardTitle className="text-2xl text-white">Produto Já Ativado</CardTitle>
-            <CardDescription className="mt-2">
-              Você já possui este produto ativo na sua conta
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {product && (
-              <div className="bg-blue-900/20 border border-blue-800/30 rounded-xl p-4 mb-6">
-                <div className="flex flex-col gap-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-slate-400 text-sm">Produto</span>
-                    <span className="text-white font-medium">{product.name}</span>
-                  </div>
-                  {product.expires_at && (
-                    <div className="flex items-center justify-between">
-                      <span className="text-slate-400 text-sm">Válido até</span>
-                      <span className="text-blue-400 text-sm font-medium">
-                        {new Date(product.expires_at).getFullYear() > 2100
-                          ? 'Vitalício ♾️'
-                          : new Date(product.expires_at).toLocaleDateString('pt-BR')}
-                      </span>
-                    </div>
-                  )}
-                </div>
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-6" onClick={closeAlreadyOwnedPopup}>
+          <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm" />
+          <div
+            className="relative w-full max-w-md rounded-2xl border border-blue-800/50 bg-slate-900 p-6 shadow-2xl"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <button
+              type="button"
+              onClick={closeAlreadyOwnedPopup}
+              className="absolute right-3 top-3 rounded-md p-1.5 text-slate-400 transition-colors hover:bg-slate-800 hover:text-white"
+              aria-label="Fechar aviso"
+            >
+              <X className="h-4 w-4" />
+            </button>
+
+            <div className="mb-4 flex items-center gap-3">
+              <div className="rounded-xl bg-blue-600/20 p-3">
+                <CheckCircle className="h-6 w-6 text-blue-400" />
               </div>
-            )}
+              <div>
+                <p className="text-lg font-semibold text-white">Acesso confirmado</p>
+                <p className="text-sm text-slate-300">
+                  Você já recebeu <span className="font-medium text-white">{product?.name || 'este produto'}</span>.
+                </p>
+              </div>
+            </div>
 
-            <Button
-              onClick={() => router.push('/')}
-              className="w-full flex items-center justify-center gap-2 mb-3"
-            >
-              <Home className="w-5 h-5" />
-              Ir para o Início
-            </Button>
+            <p className="mb-5 text-sm text-slate-400">
+              Clique em qualquer lugar, no X ou em OK para voltar ao Hub.
+            </p>
 
-            <Button
-              onClick={() => router.push('/dashboard')}
-              variant="outline"
-              className="w-full flex items-center justify-center gap-2"
-            >
-              Meus Produtos
-              <ArrowRight className="w-4 h-4" />
+            <Button onClick={closeAlreadyOwnedPopup} className="w-full">
+              OK
             </Button>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       )}
 
       {/* Invalid Code */}

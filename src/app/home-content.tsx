@@ -24,6 +24,18 @@ export default function HomeContent() {
   const errorParam = searchParams.get('error');
   const productParam = searchParams.get('product');
 
+  const showNoAccessAlert =
+    (errorParam === 'no_access' && Boolean(productParam)) ||
+    (errorParam === 'festa_no_access' && productParam === 'festa-magica');
+
+  const noAccessTitle = errorParam === 'festa_no_access'
+    ? 'Esta conta não possui Festa Mágica'
+    : 'Acesso não encontrado';
+
+  const noAccessDescription = errorParam === 'festa_no_access'
+    ? 'A conta atual não possui acesso ativo ao Festa Mágica. Faça login com a conta correta ou ative um código no Hub.'
+    : 'Você precisa ativar um código para acessar este produto.';
+
   useEffect(() => {
     async function init() {
       try {
@@ -177,14 +189,14 @@ export default function HomeContent() {
       )}
 
       <main className="max-w-5xl mx-auto px-6 py-12">
-        {errorParam === 'no_access' && productParam && (
+        {showNoAccessAlert && (
           <div className="mb-8 bg-amber-900/30 border border-amber-700/50 text-amber-300 p-5 rounded-2xl flex items-start gap-4 backdrop-blur-sm">
             <div className="bg-amber-500/20 p-2 rounded-lg">
               <AlertCircle className="w-5 h-5" />
             </div>
             <div>
-              <p className="font-semibold">Acesso não encontrado</p>
-              <p className="text-sm text-amber-400/80">Você precisa ativar um código para acessar este produto.</p>
+              <p className="font-semibold">{noAccessTitle}</p>
+              <p className="text-sm text-amber-400/80">{noAccessDescription}</p>
             </div>
           </div>
         )}
