@@ -32,9 +32,24 @@ export default function CodeActivationPage() {
   const [errorMessage, setErrorMessage] = useState('');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
+  const getAlreadyOwnedPopupKey = () => {
+    return `already-owned-popup-seen:${product?.id || 'unknown'}`;
+  };
+
   const closeAlreadyOwnedPopup = () => {
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem(getAlreadyOwnedPopupKey(), '1');
+    }
     router.push('/');
   };
+
+  useEffect(() => {
+    if (state !== 'already_owned' || typeof window === 'undefined') return;
+    const hasSeenPopup = window.localStorage.getItem(getAlreadyOwnedPopupKey()) === '1';
+    if (hasSeenPopup) {
+      router.push('/');
+    }
+  }, [state, product?.id, router]);
 
   // Step 1: Check if user is logged in and validate the code
   useEffect(() => {
@@ -271,13 +286,13 @@ export default function CodeActivationPage() {
               <div>
                 <p className="text-lg font-semibold text-white">Acesso confirmado</p>
                 <p className="text-sm text-slate-300">
-                  Você já recebeu <span className="font-medium text-white">{product?.name || 'este produto'}</span>.
+                  Agora você tem <span className="font-medium text-white">{product?.name || 'este produto'}</span> na sua conta.
                 </p>
               </div>
             </div>
 
             <p className="mb-5 text-sm text-slate-400">
-              Clique em qualquer lugar, no X ou em OK para voltar ao Hub.
+              Parabéns! Você já pode usar este produto.
             </p>
 
             <Button onClick={closeAlreadyOwnedPopup} className="w-full">
