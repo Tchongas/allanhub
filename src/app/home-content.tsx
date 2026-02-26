@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { AlertCircle, LogIn, Settings, Sparkles } from 'lucide-react';
+import { AlertCircle, LogIn, Search, Settings, Sparkles, X } from 'lucide-react';
 import { Button } from '@/components/ui';
 import { ProductCard } from '@/components/product-card';
 import { ProfileModal } from '@/components/profile-modal';
@@ -20,6 +20,7 @@ export default function HomeContent() {
   const [products, setProducts] = useState<Product[]>([]);
   const [banners, setBanners] = useState<Banner[]>([]);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [productSearch, setProductSearch] = useState('');
 
   const errorParam = searchParams.get('error');
   const productParam = searchParams.get('product');
@@ -136,6 +137,17 @@ export default function HomeContent() {
     return aRank - bRank;
   });
 
+  const normalizedSearch = productSearch.trim().toLowerCase();
+  const filteredProducts = sortedProducts.filter((product) => {
+    if (!normalizedSearch) return true;
+
+    const searchableFeatures = Array.isArray(product.features)
+      ? product.features.join(' ')
+      : '';
+    const searchableContent = `${product.name} ${product.description} ${searchableFeatures}`.toLowerCase();
+    return searchableContent.includes(normalizedSearch);
+  });
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-900 to-slate-800">
       <header className="bg-slate-900/80 backdrop-blur-md border-b border-slate-800/50 py-4 px-6 sticky top-0 z-50">
@@ -216,10 +228,34 @@ export default function HomeContent() {
           </p>
         </div>
 
+        <div className="mb-7">
+          <div className="relative w-full max-w-2xl">
+            <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
+            <input
+              type="search"
+              value={productSearch}
+              onChange={(event) => setProductSearch(event.target.value)}
+              placeholder="Buscar produto"
+              className="h-11 w-full rounded-xl border border-slate-700/70 bg-slate-900/70 pl-11 pr-10 text-sm text-slate-100 outline-none transition-all placeholder:text-slate-500 focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20"
+              aria-label="Buscar produto"
+            />
+            {productSearch && (
+              <button
+                type="button"
+                onClick={() => setProductSearch('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-1 text-slate-400 transition-colors hover:bg-slate-800 hover:text-white"
+                aria-label="Limpar busca"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+        </div>
+
 
 
         <div className="space-y-6">
-          {sortedProducts.map((product) => (
+          {filteredProducts.map((product) => (
             <ProductCard
               key={product.id}
               product={product}
@@ -230,6 +266,12 @@ export default function HomeContent() {
               onActivate={handleActivate}
             />
           ))}
+
+          {filteredProducts.length === 0 && (
+            <div className="rounded-2xl border border-slate-700/60 bg-slate-900/60 p-6 text-center text-slate-400">
+              Nenhum produto encontrado para <span className="text-slate-200">"{productSearch}"</span>.
+            </div>
+          )}
         </div>
       </main>
     </div>
