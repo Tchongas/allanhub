@@ -30,22 +30,27 @@ export default function CodeActivationPage() {
   const [state, setState] = useState<ActivationState>('loading');
   const [product, setProduct] = useState<ProductInfo | null>(null);
   const [errorMessage, setErrorMessage] = useState('');
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   const getAlreadyOwnedPopupKey = () => {
-    return `already-owned-popup-seen:${product?.id || 'unknown'}`;
+    if (!product?.id) return null;
+    return `already-owned-popup-seen:${product.id}`;
   };
 
   const closeAlreadyOwnedPopup = () => {
     if (typeof window !== 'undefined') {
-      window.localStorage.setItem(getAlreadyOwnedPopupKey(), '1');
+      const popupKey = getAlreadyOwnedPopupKey();
+      if (popupKey) {
+        window.localStorage.setItem(popupKey, '1');
+      }
     }
     router.push('/');
   };
 
   useEffect(() => {
-    if (state !== 'already_owned' || typeof window === 'undefined') return;
-    const hasSeenPopup = window.localStorage.getItem(getAlreadyOwnedPopupKey()) === '1';
+    if (state !== 'already_owned' || typeof window === 'undefined' || !product?.id) return;
+    const popupKey = getAlreadyOwnedPopupKey();
+    if (!popupKey) return;
+    const hasSeenPopup = window.localStorage.getItem(popupKey) === '1';
     if (hasSeenPopup) {
       router.push('/');
     }
@@ -60,7 +65,6 @@ export default function CodeActivationPage() {
         const authData = await authRes.json();
 
         if (authData.authenticated) {
-          setIsAuthenticated(true);
           // User is logged in — try to activate immediately
           setState('activating');
           await activateCode();
@@ -93,7 +97,6 @@ export default function CodeActivationPage() {
         setState('success');
       } else if (response.status === 401) {
         // Session expired or invalid — prompt login
-        setIsAuthenticated(false);
         setState('not_logged_in');
       } else if (response.status === 409 && data.error === 'already_owned') {
         // User already has this product active

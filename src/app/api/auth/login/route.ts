@@ -16,7 +16,7 @@ function mapLoginError(message?: string): string {
   }
 
   if (normalized.includes('invalid login credentials')) {
-    return 'Email ou senha inválidos. Se sua conta foi criada com Google, clique em "Continuar com Google".';
+    return 'Email ou senha inválidos. Se não lembrar como entrou, tente também "Continuar com Google".';
   }
 
   return 'Email ou senha inválidos';

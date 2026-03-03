@@ -1,13 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { createSupabaseServer } from '@/lib/supabase/server';
-import { createServiceRoleClient } from '@/lib/supabase/server';
 import { ensureHubUserForAuthUser } from '@/lib/hub-user';
 
 function safeRedirectPath(redirectTo?: string): string {
   if (!redirectTo) return '/';
   return redirectTo.startsWith('/') ? redirectTo : '/';
 }
+
+const ACCOUNT_EXISTS_MESSAGE =
+  'Este email já está em uso. Tente entrar com email/senha ou continuar com Google.';
 
 export async function POST(request: NextRequest) {
   try {
@@ -22,29 +24,8 @@ export async function POST(request: NextRequest) {
     }
 
     const supabase = await createSupabaseServer();
-    const serviceRole = createServiceRoleClient();
     const normalizedEmail = String(email).trim().toLowerCase();
     const normalizedName = String(name || '').trim();
-
-    const { data: existingHubUsers, error: existingHubUsersError } = await serviceRole
-      .from('hub_users')
-      .select('id')
-      .ilike('email', normalizedEmail)
-      .limit(1);
-
-    if (existingHubUsersError) {
-      throw new Error(`Failed to verify existing email: ${existingHubUsersError.message}`);
-    }
-
-    if (existingHubUsers && existingHubUsers.length > 0) {
-      return NextResponse.json(
-        {
-          error:
-            'Este email já está em uso. Se sua conta foi criada com Google, clique em "Continuar com Google".',
-        },
-        { status: 409 }
-      );
-    }
 
     const { data, error } = await supabase.auth.signUp({
       email: normalizedEmail,
@@ -61,8 +42,7 @@ export async function POST(request: NextRequest) {
       if (error.message.toLowerCase().includes('already')) {
         return NextResponse.json(
           {
-            error:
-              'Este email já está em uso. Se sua conta foi criada com Google, clique em "Continuar com Google".',
+            error: ACCOUNT_EXISTS_MESSAGE,
           },
           { status: 409 }
         );
@@ -75,8 +55,7 @@ export async function POST(request: NextRequest) {
     if (data.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) {
       return NextResponse.json(
         {
-          error:
-            'Este email já está em uso. Se sua conta foi criada com Google, clique em "Continuar com Google".',
+          error: ACCOUNT_EXISTS_MESSAGE,
         },
         { status: 409 }
       );
