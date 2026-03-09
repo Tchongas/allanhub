@@ -64,11 +64,17 @@ async function ensureHubUserByEmail(email: string, name?: string): Promise<{ id:
   return { id: created.id as string };
 }
 
-async function resolveMappedProductId(productUcode: string): Promise<string | null> {
+interface HotmartCreditMapping {
+  productId: string;
+  grantMode: 'access' | 'credits';
+  creditsAmount: number | null;
+}
+
+async function resolveMappedCreditConfig(productUcode: string): Promise<HotmartCreditMapping | null> {
   const supabase = createServiceRoleClient();
   const { data, error } = await supabase
     .from('hotmart_product_mappings')
-    .select('product_id')
+    .select('product_id, grant_mode, credits_amount')
     .eq('hotmart_product_ucode', productUcode)
     .eq('active', true)
     .limit(1);
@@ -78,13 +84,80 @@ async function resolveMappedProductId(productUcode: string): Promise<string | nu
   }
 
   if (!data || data.length === 0) return null;
-  return data[0].product_id as string;
+
+  const rawGrantMode = String((data[0] as any).grant_mode || 'access').toLowerCase();
+  const grantMode: 'access' | 'credits' = rawGrantMode === 'credits' ? 'credits' : 'access';
+
+  return {
+    productId: data[0].product_id as string,
+    grantMode,
+    creditsAmount: data[0].credits_amount === null || data[0].credits_amount === undefined
+      ? null
+      : Number(data[0].credits_amount),
+  };
 }
 
-async function grantProductToUser(userId: string, productId: string, transaction: string, eventId: string): Promise<boolean> {
+async function hasApprovedGrantRecord(userId: string, productId: string, transaction: string): Promise<boolean> {
   const supabase = createServiceRoleClient();
 
-  const { data: existing } = await supabase
+  const { data } = await supabase
+    .from('hotmart_grants')
+    .select('id')
+    .eq('purchase_transaction', transaction)
+    .eq('product_id', productId)
+    .eq('user_id', userId)
+    .eq('purchase_status', 'APPROVED')
+    .limit(1);
+
+  return Boolean(data && data.length > 0);
+}
+
+async function upsertHotmartGrantRecord(params: {
+  userId: string;
+  productId: string;
+  transaction: string;
+  eventId: string;
+  purchaseStatus: string;
+  grantType: 'product' | 'credit';
+  creditsAmount?: number | null;
+  metadata?: Record<string, unknown>;
+  revokedAt?: string;
+}): Promise<void> {
+  const supabase = createServiceRoleClient();
+  const { error } = await supabase.from('hotmart_grants').upsert(
+    {
+      purchase_transaction: params.transaction,
+      product_id: params.productId,
+      user_id: params.userId,
+      source_event_id: params.eventId,
+      purchase_status: params.purchaseStatus,
+      credits_amount: params.creditsAmount ?? null,
+      grant_type: params.grantType,
+      metadata: params.metadata || {},
+      revoked_at: params.revokedAt || null,
+    },
+    { onConflict: 'purchase_transaction,product_id,user_id' }
+  );
+
+  if (error) {
+    throw new Error(`Failed to write hotmart grant ledger: ${error.message}`);
+  }
+}
+
+async function grantAccessToUser(
+  userId: string,
+  productId: string,
+  transaction: string,
+  eventId: string,
+  eventName: string
+): Promise<boolean> {
+  const supabase = createServiceRoleClient();
+
+  if (await hasApprovedGrantRecord(userId, productId, transaction)) {
+    return false;
+  }
+
+  const { data: existingActive } = await supabase
     .from('user_products')
     .select('id')
     .eq('user_id', userId)
@@ -93,7 +166,16 @@ async function grantProductToUser(userId: string, productId: string, transaction
     .gt('expires_at', new Date().toISOString())
     .limit(1);
 
-  if (existing && existing.length > 0) {
+  if (existingActive && existingActive.length > 0) {
+    await upsertHotmartGrantRecord({
+      userId,
+      productId,
+      transaction,
+      eventId,
+      purchaseStatus: 'APPROVED',
+      grantType: 'product',
+      metadata: { event_name: eventName, existing_entitlement: true },
+    });
     return false;
   }
 
@@ -111,7 +193,6 @@ async function grantProductToUser(userId: string, productId: string, transaction
   }
 
   const syntheticActivationCode = `hotmart:${transaction}`;
-
   const { error: grantError } = await supabase.from('user_products').insert({
     user_id: userId,
     product_id: productId,
@@ -126,26 +207,76 @@ async function grantProductToUser(userId: string, productId: string, transaction
     throw new Error(`Failed to create user product grant: ${grantError.message}`);
   }
 
-  const { error: ledgerError } = await supabase.from('hotmart_grants').upsert(
-    {
-      purchase_transaction: transaction,
-      product_id: productId,
-      user_id: userId,
-      source_event_id: eventId,
-      purchase_status: 'APPROVED',
-      metadata: {},
-    },
-    { onConflict: 'purchase_transaction,product_id,user_id' }
-  );
-
-  if (ledgerError) {
-    throw new Error(`Failed to write hotmart grant ledger: ${ledgerError.message}`);
-  }
+  await upsertHotmartGrantRecord({
+    userId,
+    productId,
+    transaction,
+    eventId,
+    purchaseStatus: 'APPROVED',
+    grantType: 'product',
+    metadata: { event_name: eventName },
+  });
 
   return true;
 }
 
-async function revokeProductFromUser(userId: string, productId: string, transaction: string, eventId: string, purchaseStatus: string): Promise<void> {
+async function grantCreditsToUser(
+  userId: string,
+  productId: string,
+  creditsAmount: number,
+  transaction: string,
+  eventId: string,
+  eventName: string
+): Promise<boolean> {
+  if (await hasApprovedGrantRecord(userId, productId, transaction)) {
+    return false;
+  }
+
+  const supabase = createServiceRoleClient();
+
+  if (creditsAmount <= 0) {
+    throw new Error(`Invalid credits amount for mapped product ${productId}: ${creditsAmount}`);
+  }
+
+  const creditReference = `hotmart:${transaction}:${productId}:grant`;
+  const { error: creditGrantError } = await supabase.rpc('grant_credits', {
+    p_user_id: userId,
+    p_amount: creditsAmount,
+    p_source: 'hotmart_purchase',
+    p_reference_id: creditReference,
+    p_metadata: {
+      event_id: eventId,
+      event_name: eventName,
+      product_id: productId,
+      transaction,
+    },
+  });
+
+  if (creditGrantError) {
+    throw new Error(`Failed to grant credits: ${creditGrantError.message}`);
+  }
+
+  await upsertHotmartGrantRecord({
+    userId,
+    productId,
+    transaction,
+    eventId,
+    purchaseStatus: 'APPROVED',
+    grantType: 'credit',
+    creditsAmount,
+    metadata: { event_name: eventName },
+  });
+
+  return true;
+}
+
+async function revokeAccessGrant(
+  userId: string,
+  productId: string,
+  transaction: string,
+  eventId: string,
+  purchaseStatus: string
+): Promise<void> {
   const supabase = createServiceRoleClient();
 
   await supabase
@@ -158,18 +289,35 @@ async function revokeProductFromUser(userId: string, productId: string, transact
     .eq('product_id', productId)
     .eq('status', 'active');
 
-  await supabase.from('hotmart_grants').upsert(
-    {
-      purchase_transaction: transaction,
-      product_id: productId,
-      user_id: userId,
-      source_event_id: eventId,
-      purchase_status: purchaseStatus,
-      revoked_at: new Date().toISOString(),
-      metadata: {},
-    },
-    { onConflict: 'purchase_transaction,product_id,user_id' }
-  );
+  await upsertHotmartGrantRecord({
+    userId,
+    productId,
+    transaction,
+    eventId,
+    purchaseStatus,
+    grantType: 'product',
+    metadata: {},
+    revokedAt: new Date().toISOString(),
+  });
+}
+
+async function revokeCreditGrant(
+  userId: string,
+  productId: string,
+  transaction: string,
+  eventId: string,
+  purchaseStatus: string
+): Promise<void> {
+  await upsertHotmartGrantRecord({
+    userId,
+    productId,
+    transaction,
+    eventId,
+    purchaseStatus,
+    grantType: 'credit',
+    metadata: { revoked_without_wallet_debit: true },
+    revokedAt: new Date().toISOString(),
+  });
 }
 
 export async function processHotmartWebhookEvent(payload: HotmartWebhookPayload): Promise<HotmartProcessResult> {
@@ -200,8 +348,8 @@ export async function processHotmartWebhookEvent(payload: HotmartWebhookPayload)
     return { accepted: false, status: 'failed', reason: 'Missing purchase transaction' };
   }
 
-  const productId = await resolveMappedProductId(productUcode);
-  if (!productId) {
+  const creditConfig = await resolveMappedCreditConfig(productUcode);
+  if (!creditConfig) {
     return {
       accepted: false,
       status: 'failed',
@@ -212,12 +360,25 @@ export async function processHotmartWebhookEvent(payload: HotmartWebhookPayload)
   const hubUser = await ensureHubUserByEmail(normalizedEmail, buyerName);
 
   if (GRANT_EVENTS.has(eventName)) {
-    const grantCreated = await grantProductToUser(hubUser.id, productId, transaction, eventId);
+    const grantCreated = creditConfig.grantMode === 'credits'
+      ? await grantCreditsToUser(
+          hubUser.id,
+          creditConfig.productId,
+          Number(creditConfig.creditsAmount || 0),
+          transaction,
+          eventId,
+          eventName
+        )
+      : await grantAccessToUser(hubUser.id, creditConfig.productId, transaction, eventId, eventName);
     return { accepted: true, status: 'processed', grantCreated };
   }
 
   if (REVOKE_EVENTS.has(eventName)) {
-    await revokeProductFromUser(hubUser.id, productId, transaction, eventId, eventName);
+    if (creditConfig.grantMode === 'credits') {
+      await revokeCreditGrant(hubUser.id, creditConfig.productId, transaction, eventId, eventName);
+    } else {
+      await revokeAccessGrant(hubUser.id, creditConfig.productId, transaction, eventId, eventName);
+    }
     return { accepted: true, status: 'processed' };
   }
 

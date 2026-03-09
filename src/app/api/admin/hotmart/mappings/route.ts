@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
 
-    const { hotmart_product_ucode, product_id, active, notes } = await request.json();
+    const { hotmart_product_ucode, product_id, grant_mode, credits_amount, active, notes } = await request.json();
 
     if (!hotmart_product_ucode || !product_id) {
       return NextResponse.json(
@@ -68,12 +68,31 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const normalizedGrantMode = String(grant_mode || 'access').trim().toLowerCase();
+    if (!['access', 'credits'].includes(normalizedGrantMode)) {
+      return NextResponse.json({ error: "grant_mode deve ser 'access' ou 'credits'" }, { status: 400 });
+    }
+
+    let normalizedCreditsAmount: number | null = null;
+    if (normalizedGrantMode === 'credits') {
+      const parsed = Number(credits_amount);
+      if (!Number.isFinite(parsed) || parsed <= 0) {
+        return NextResponse.json(
+          { error: 'credits_amount deve ser um número maior que zero para grant_mode=credits' },
+          { status: 400 }
+        );
+      }
+      normalizedCreditsAmount = Math.floor(parsed);
+    }
+
     const supabase = createServiceRoleClient();
     const { data, error } = await supabase
       .from('hotmart_product_mappings')
       .insert({
         hotmart_product_ucode: String(hotmart_product_ucode).trim(),
         product_id: String(product_id).trim(),
+        grant_mode: normalizedGrantMode,
+        credits_amount: normalizedCreditsAmount,
         active: active !== undefined ? Boolean(active) : true,
         notes: String(notes || ''),
       })
@@ -101,6 +120,34 @@ export async function PUT(request: NextRequest) {
     const { id, ...updates } = await request.json();
     if (!id) {
       return NextResponse.json({ error: 'ID do mapeamento é obrigatório' }, { status: 400 });
+    }
+
+    const normalizedGrantMode = updates.grant_mode
+      ? String(updates.grant_mode).trim().toLowerCase()
+      : undefined;
+
+    if (normalizedGrantMode !== undefined && !['access', 'credits'].includes(normalizedGrantMode)) {
+      return NextResponse.json({ error: "grant_mode deve ser 'access' ou 'credits'" }, { status: 400 });
+    }
+
+    if (normalizedGrantMode !== undefined) {
+      updates.grant_mode = normalizedGrantMode;
+    }
+
+    const effectiveGrantMode = (updates.grant_mode ? String(updates.grant_mode) : 'access').toLowerCase();
+
+    if (effectiveGrantMode === 'credits') {
+      const normalizedCreditsAmount = Number(updates.credits_amount);
+      if (!Number.isFinite(normalizedCreditsAmount) || normalizedCreditsAmount <= 0) {
+        return NextResponse.json(
+          { error: 'credits_amount deve ser um número maior que zero para grant_mode=credits' },
+          { status: 400 }
+        );
+      }
+
+      updates.credits_amount = Math.floor(normalizedCreditsAmount);
+    } else if (effectiveGrantMode === 'access') {
+      updates.credits_amount = null;
     }
 
     const normalizedUpdates = {

@@ -33,6 +33,8 @@ import {
   ExternalLink,
   Link,
   Webhook,
+  Wallet,
+  Coins,
   RotateCcw,
   CheckCircle2,
   AlertTriangle
@@ -82,10 +84,34 @@ interface HotmartMapping {
   id: number;
   hotmart_product_ucode: string;
   product_id: string;
+  grant_mode: 'access' | 'credits';
+  credits_amount: number;
   active: boolean;
   notes: string;
   created_at: string;
   updated_at: string;
+}
+
+interface CreditWallet {
+  user_id: string;
+  email: string;
+  name: string;
+  balance: number;
+  lifetime_earned: number;
+  lifetime_spent: number;
+  updated_at: string;
+}
+
+interface CreditLedgerEntry {
+  id: number;
+  user_id: string;
+  email: string;
+  name: string;
+  amount: number;
+  entry_type: 'credit' | 'debit' | 'adjustment';
+  source: string;
+  reference_id: string | null;
+  created_at: string;
 }
 
 interface HotmartEvent {
@@ -132,6 +158,8 @@ export default function AdminPage() {
   // Hotmart state
   const [hotmartMappings, setHotmartMappings] = useState<HotmartMapping[]>([]);
   const [hotmartEvents, setHotmartEvents] = useState<HotmartEvent[]>([]);
+  const [creditWallets, setCreditWallets] = useState<CreditWallet[]>([]);
+  const [creditLedger, setCreditLedger] = useState<CreditLedgerEntry[]>([]);
   const [hotmartLoading, setHotmartLoading] = useState(false);
   const [hotmartSaving, setHotmartSaving] = useState(false);
   const [retryingEventId, setRetryingEventId] = useState<string | null>(null);
@@ -140,6 +168,8 @@ export default function AdminPage() {
   const [mappingForm, setMappingForm] = useState({
     hotmart_product_ucode: '',
     product_id: '',
+    grant_mode: 'access' as 'access' | 'credits',
+    credits_amount: 100,
     active: true,
     notes: '',
   });
@@ -287,10 +317,21 @@ export default function AdminPage() {
     setHotmartEvents(data.events || []);
   }
 
+  async function loadCreditsData() {
+    const res = await fetch('/api/admin/hotmart/credits?wallet_limit=80&ledger_limit=120');
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.error || 'Erro ao carregar dados de créditos');
+    }
+
+    setCreditWallets(data.wallets || []);
+    setCreditLedger(data.ledger || []);
+  }
+
   async function loadHotmartData(status: 'all' | 'received' | 'processed' | 'ignored' | 'failed' = eventStatusFilter) {
     setHotmartLoading(true);
     try {
-      await Promise.all([loadHotmartMappings(), loadHotmartEvents(status)]);
+      await Promise.all([loadHotmartMappings(), loadHotmartEvents(status), loadCreditsData()]);
     } catch (err: any) {
       setError(err.message || 'Erro ao carregar dados do Hotmart');
     } finally {
@@ -304,6 +345,8 @@ export default function AdminPage() {
     setMappingForm({
       hotmart_product_ucode: '',
       product_id: firstProductId,
+      grant_mode: 'access',
+      credits_amount: 100,
       active: true,
       notes: '',
     });
@@ -316,6 +359,8 @@ export default function AdminPage() {
     setMappingForm({
       hotmart_product_ucode: mapping.hotmart_product_ucode,
       product_id: mapping.product_id,
+      grant_mode: mapping.grant_mode || 'access',
+      credits_amount: mapping.credits_amount || 100,
       active: mapping.active,
       notes: mapping.notes || '',
     });
@@ -326,6 +371,14 @@ export default function AdminPage() {
   async function saveMapping() {
     if (!mappingForm.hotmart_product_ucode || !mappingForm.product_id) {
       setError('Hotmart UCode e Produto são obrigatórios');
+      return;
+    }
+
+    if (
+      mappingForm.grant_mode === 'credits' &&
+      (!Number.isFinite(Number(mappingForm.credits_amount)) || Number(mappingForm.credits_amount) <= 0)
+    ) {
+      setError('Quantidade de créditos deve ser maior que zero');
       return;
     }
 
@@ -419,12 +472,16 @@ export default function AdminPage() {
     const mapping = hotmartMappings.find((m) => m.hotmart_product_ucode === productUcode);
     if (!mapping) return null;
 
+    const modeLabel = mapping.grant_mode === 'credits'
+      ? `${mapping.credits_amount} créditos`
+      : 'acesso';
+
     const product = products.find((p) => p.id === mapping.product_id);
     if (product) {
-      return `${product.name} (${product.id})`;
+      return `${product.name} (${product.id}) • ${modeLabel}`;
     }
 
-    return mapping.product_id;
+    return `${mapping.product_id} • ${modeLabel}`;
   }
 
   async function loadUsers(page: number = 1) {
@@ -700,6 +757,16 @@ export default function AdminPage() {
     return new Date(dateStr).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
   }
 
+  function formatDateTime(dateStr: string) {
+    return new Date(dateStr).toLocaleString('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  }
+
   function isExpired(dateStr: string) {
     return new Date(dateStr) < new Date();
   }
@@ -814,7 +881,7 @@ export default function AdminPage() {
             <button
               onClick={() => {
                 setActiveTab('hotmart');
-                if (hotmartMappings.length === 0 && hotmartEvents.length === 0) {
+                if (hotmartMappings.length === 0 && hotmartEvents.length === 0 && creditWallets.length === 0 && creditLedger.length === 0) {
                   startCreateMapping();
                   loadHotmartData('all');
                 }
@@ -1589,6 +1656,39 @@ export default function AdminPage() {
                     </select>
                   </div>
                   <div>
+                    <label className="block text-sm text-slate-400 mb-1">Tipo de concessão</label>
+                    <select
+                      value={mappingForm.grant_mode}
+                      onChange={(e) =>
+                        setMappingForm({
+                          ...mappingForm,
+                          grant_mode: e.target.value as 'access' | 'credits',
+                        })
+                      }
+                      className="w-full h-11 px-4 bg-slate-900/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="access">Acesso ao produto</option>
+                      <option value="credits">Créditos</option>
+                    </select>
+                  </div>
+                  {mappingForm.grant_mode === 'credits' && (
+                  <div>
+                    <label className="block text-sm text-slate-400 mb-1">Créditos concedidos</label>
+                    <Input
+                      type="number"
+                      min={1}
+                      value={mappingForm.credits_amount}
+                      onChange={(e) =>
+                        setMappingForm({
+                          ...mappingForm,
+                          credits_amount: Math.max(0, Number.parseInt(e.target.value || '0', 10) || 0),
+                        })
+                      }
+                      className="bg-slate-900/50 border-slate-600 text-white"
+                    />
+                  </div>
+                  )}
+                  <div>
                     <label className="block text-sm text-slate-400 mb-1">Notas (opcional)</label>
                     <Input
                       value={mappingForm.notes}
@@ -1627,6 +1727,12 @@ export default function AdminPage() {
                         <div className="min-w-0">
                           <p className="text-sm text-white font-medium break-all">{mapping.hotmart_product_ucode}</p>
                           <p className="text-xs text-slate-400 mt-1">Produto: <code>{mapping.product_id}</code></p>
+                          <p className="text-xs text-slate-400 mt-1">
+                            Tipo: <span className="text-slate-200 font-medium">{mapping.grant_mode === 'credits' ? 'Créditos' : 'Acesso'}</span>
+                          </p>
+                          {mapping.grant_mode === 'credits' && (
+                            <p className="text-xs text-slate-400 mt-1">Créditos: <span className="text-emerald-300 font-medium">{mapping.credits_amount}</span></p>
+                          )}
                           {mapping.notes && <p className="text-xs text-slate-500 mt-1">{mapping.notes}</p>}
                           <div className="mt-2">
                             <Badge variant={mapping.active ? 'success' : 'secondary'}>
@@ -1735,6 +1841,68 @@ export default function AdminPage() {
                       </div>
                     );
                   })}
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+              <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-5">
+                <div className="flex items-center justify-between gap-3 mb-4">
+                  <h3 className="text-white font-semibold flex items-center gap-2">
+                    <Wallet className="w-4 h-4 text-emerald-400" /> Saldos de Créditos
+                  </h3>
+                  <Button variant="ghost" onClick={() => loadHotmartData(eventStatusFilter)} disabled={hotmartLoading}>
+                    <RefreshCw className={`w-4 h-4 ${hotmartLoading ? 'animate-spin' : ''}`} /> Atualizar
+                  </Button>
+                </div>
+
+                <div className="space-y-2 max-h-[380px] overflow-auto pr-1">
+                  {creditWallets.length === 0 ? (
+                    <p className="text-sm text-slate-500">Nenhuma carteira com saldo encontrada.</p>
+                  ) : creditWallets.map((wallet) => (
+                    <div key={wallet.user_id} className="bg-slate-900/50 border border-slate-700 rounded-lg p-3">
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="text-sm text-white font-medium truncate">{wallet.name || 'Sem nome'}</p>
+                          <p className="text-xs text-slate-400 truncate">{wallet.email || wallet.user_id}</p>
+                          <p className="text-xs text-slate-500 mt-1">Atualizado: {formatDateTime(wallet.updated_at)}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-emerald-300 font-semibold">{wallet.balance} créditos</p>
+                          <p className="text-xs text-slate-500">+{wallet.lifetime_earned} / -{wallet.lifetime_spent}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-5">
+                <h3 className="text-white font-semibold mb-4 flex items-center gap-2">
+                  <Coins className="w-4 h-4 text-amber-300" /> Ledger de Créditos (recente)
+                </h3>
+
+                <div className="space-y-2 max-h-[380px] overflow-auto pr-1">
+                  {creditLedger.length === 0 ? (
+                    <p className="text-sm text-slate-500">Nenhum lançamento no ledger.</p>
+                  ) : creditLedger.map((entry) => (
+                    <div key={entry.id} className="bg-slate-900/50 border border-slate-700 rounded-lg p-3">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="text-sm text-white font-medium truncate">{entry.name || entry.email || entry.user_id}</p>
+                          <p className="text-xs text-slate-400">Fonte: <code>{entry.source}</code></p>
+                          {entry.reference_id && <p className="text-xs text-slate-500 break-all">Ref: {entry.reference_id}</p>}
+                          <p className="text-xs text-slate-500">{formatDateTime(entry.created_at)}</p>
+                        </div>
+                        <div className="text-right">
+                          <Badge variant={entry.amount >= 0 ? 'success' : 'error'}>
+                            {entry.amount >= 0 ? '+' : ''}{entry.amount}
+                          </Badge>
+                          <p className="text-xs text-slate-500 mt-1">{entry.entry_type}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
