@@ -48,11 +48,29 @@ export async function GET(request: NextRequest) {
 
     const supabase = createServiceRoleClient();
 
-    const { data: walletRows, error: walletError } = await supabase
+    let walletRows: any[] | null = null;
+    let walletError: { message: string } | null = null;
+
+    const walletWithLifetime = await supabase
       .from('user_credit_wallets')
       .select('user_id, balance, lifetime_earned, lifetime_spent, updated_at')
       .order('balance', { ascending: false })
       .limit(walletLimit);
+
+    if (!walletWithLifetime.error) {
+      walletRows = walletWithLifetime.data;
+    } else if ((walletWithLifetime.error.message || '').includes('lifetime_earned')) {
+      const walletMinimal = await supabase
+        .from('user_credit_wallets')
+        .select('user_id, balance, updated_at')
+        .order('balance', { ascending: false })
+        .limit(walletLimit);
+
+      walletRows = walletMinimal.data;
+      walletError = walletMinimal.error ? { message: walletMinimal.error.message } : null;
+    } else {
+      walletError = { message: walletWithLifetime.error.message };
+    }
 
     if (walletError) {
       return NextResponse.json({ error: walletError.message }, { status: 500 });
