@@ -25,17 +25,9 @@ export default function HomeContent() {
   const errorParam = searchParams.get('error');
   const productParam = searchParams.get('product');
 
-  const showNoAccessAlert =
-    (errorParam === 'no_access' && Boolean(productParam)) ||
-    (errorParam === 'festa_no_access' && productParam === 'festa-magica');
-
-  const noAccessTitle = errorParam === 'festa_no_access'
-    ? 'Esta conta não possui Festa Mágica'
-    : 'Acesso não encontrado';
-
-  const noAccessDescription = errorParam === 'festa_no_access'
-    ? 'A conta atual não possui acesso ativo ao Festa Mágica. Faça login com a conta correta ou ative um código no Hub.'
-    : 'Você precisa ativar um código para acessar este produto.';
+  const showNoAccessAlert = errorParam === 'no_access' && Boolean(productParam);
+  const noAccessTitle = 'Acesso não encontrado';
+  const noAccessDescription = 'Você precisa ativar um código para acessar este produto.';
 
   useEffect(() => {
     async function init() {

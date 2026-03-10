@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { createServiceRoleClient } from '@/lib/supabase/server';
 import { ensureHubUserForAuthUser } from '@/lib/hub-user';
-import { getActiveUserProduct } from '@/lib/supabase/db';
 import { createHubToken, generateNonce } from '@/lib/hub/jwt';
 import {
   buildFestaCallbackRedirectUrl,
@@ -89,12 +88,6 @@ export async function GET(request: NextRequest) {
     if (!user.email) {
       logFestaHandoffDenied({ reason: 'missing_email', userId: hubUser.id, product });
       return redirectToHubMembersWithError(request, 'festa_missing_email');
-    }
-
-    const activeAccess = await getActiveUserProduct(hubUser.id, product);
-    if (!activeAccess) {
-      logFestaHandoffDenied({ reason: 'no_access', userId: hubUser.id, product });
-      return redirectToHubMembersWithError(request, 'festa_no_access');
     }
 
     const token = await createHubToken({
