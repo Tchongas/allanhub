@@ -1,5 +1,5 @@
 import { createServiceRoleClient } from './server';
-import { User, UserProduct, ActivationCode } from '@/types';
+import { User, UserProduct, ActivationCode, Product } from '@/types';
 
 export async function getUserById(userId: string): Promise<User | null> {
   const supabase = createServiceRoleClient();
@@ -169,4 +169,27 @@ export async function generateMultipleActivationCodes(productId: string, count: 
   }
   
   return codes;
+}
+
+export async function getProductByActivationCode(code: string): Promise<Product | null> {
+  const normalizedCode = code.trim().toUpperCase();
+  if (!normalizedCode) return null;
+
+  const supabase = createServiceRoleClient();
+  const { data: activationCode, error: codeError } = await supabase
+    .from('activation_codes')
+    .select('product_id')
+    .eq('code', normalizedCode)
+    .single();
+
+  if (codeError || !activationCode) return null;
+
+  const { data: product, error: productError } = await supabase
+    .from('products')
+    .select('*')
+    .eq('id', activationCode.product_id)
+    .single();
+
+  if (productError || !product) return null;
+  return product as Product;
 }

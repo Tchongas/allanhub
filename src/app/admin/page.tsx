@@ -235,6 +235,23 @@ export default function AdminPage() {
 <p style="text-align: center; margin-top: 0.5rem;">
 </p>`;
 
+  const EXAMPLE_WELCOME_HTML = `<h2>Compra confirmada 🎉</h2>
+
+<p>Parabéns! Seu pagamento foi aprovado e sua compra já está registrada.</p>
+
+<div class="success-box">
+  <strong>Próximo passo:</strong> Clique no botão abaixo para abrir o produto.
+</div>
+
+<h3>O que vai acontecer agora?</h3>
+<ul class="steps">
+  <li>Você será levado para o site do produto</li>
+  <li>Se necessário, faça login com o mesmo e-mail da compra</li>
+  <li>Pronto! Você já pode começar</li>
+</ul>
+
+<p class="text-muted text-small">Se tiver dúvidas, fale com nosso suporte.</p>`;
+
   const emptyProduct: Omit<Product, 'created_at' | 'updated_at'> = {
     id: '',
     name: '',
@@ -245,6 +262,9 @@ export default function AdminPage() {
     url: '',
     shop_link: '',
     modal_html: '',
+    welcome_html: '',
+    welcome_button_text: 'Acessar site',
+    welcome_button_url: '',
     price: 0,
     duration_months: 3,
     is_lifetime: false,
@@ -255,6 +275,7 @@ export default function AdminPage() {
   const [formData, setFormData] = useState<Omit<Product, 'created_at' | 'updated_at'>>(emptyProduct);
   const [featuresText, setFeaturesText] = useState('');
   const [showHtmlPreview, setShowHtmlPreview] = useState(false);
+  const [showWelcomePreview, setShowWelcomePreview] = useState(false);
 
   useEffect(() => {
     async function checkAdmin() {
@@ -654,6 +675,7 @@ export default function AdminPage() {
     setFeaturesText(product.features.join('\n'));
     setIsCreating(false);
     setShowHtmlPreview(false);
+    setShowWelcomePreview(false);
     setError(null);
     setSuccess(null);
   }
@@ -664,6 +686,7 @@ export default function AdminPage() {
     setFeaturesText('');
     setIsCreating(true);
     setShowHtmlPreview(false);
+    setShowWelcomePreview(false);
     setError(null);
     setSuccess(null);
   }
@@ -674,6 +697,7 @@ export default function AdminPage() {
     setFormData(emptyProduct);
     setFeaturesText('');
     setShowHtmlPreview(false);
+    setShowWelcomePreview(false);
     setError(null);
   }
 
@@ -1029,6 +1053,75 @@ export default function AdminPage() {
               )}
               <p className="text-xs text-slate-500 mt-1">
                 Use classes: <code className="text-blue-400">btn-primary</code>, <code className="text-blue-400">btn-outline</code>, <code className="text-blue-400">info-box</code>, <code className="text-blue-400">warning-box</code>, <code className="text-blue-400">success-box</code>, <code className="text-blue-400">steps</code>. Deixe vazio para redirecionar direto.
+              </p>
+            </div>
+
+            {/* Public Welcome Page Section */}
+            <div className="mb-4 border border-slate-700/70 rounded-lg p-4 bg-slate-900/30">
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-sm font-medium text-slate-300 flex items-center gap-2">
+                  <Link className="w-4 h-4" /> HTML da Página de Boas-vindas Pública
+                </label>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ ...formData, welcome_html: EXAMPLE_WELCOME_HTML })}
+                    className="text-xs text-blue-400 hover:text-blue-300 flex items-center gap-1 transition-colors"
+                  >
+                    <FileCode className="w-3 h-3" /> Inserir exemplo
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowWelcomePreview(!showWelcomePreview)}
+                    className="text-xs text-slate-400 hover:text-white flex items-center gap-1 transition-colors"
+                  >
+                    {showWelcomePreview ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+                    {showWelcomePreview ? 'Editar' : 'Pré-visualizar'}
+                  </button>
+                </div>
+              </div>
+
+              {showWelcomePreview ? (
+                <div className="w-full min-h-[220px] bg-slate-800 border border-slate-600 rounded-lg overflow-hidden">
+                  <div className="px-3 py-2 bg-slate-700/50 border-b border-slate-600 text-xs text-slate-400">Pré-visualização</div>
+                  <div
+                    className="product-modal-content p-4"
+                    dangerouslySetInnerHTML={{ __html: formData.welcome_html || '<p style="color: #64748b;">Nenhum HTML inserido ainda.</p>' }}
+                  />
+                </div>
+              ) : (
+                <textarea
+                  value={formData.welcome_html || ''}
+                  onChange={(e) => setFormData({ ...formData, welcome_html: e.target.value })}
+                  placeholder='<h2>Compra confirmada!</h2>\n<p>Obrigado por comprar.</p>'
+                  rows={9}
+                  className="w-full px-4 py-2 bg-slate-900/50 border border-slate-600 rounded-lg text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
+                />
+              )}
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-400 mb-1">Texto do botão</label>
+                  <Input
+                    value={formData.welcome_button_text || ''}
+                    onChange={(e) => setFormData({ ...formData, welcome_button_text: e.target.value })}
+                    placeholder="Acessar site"
+                    className="bg-slate-900/50 border-slate-600 text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-400 mb-1">URL do botão</label>
+                  <Input
+                    value={formData.welcome_button_url || ''}
+                    onChange={(e) => setFormData({ ...formData, welcome_button_url: e.target.value })}
+                    placeholder="https://app.exemplo.com"
+                    className="bg-slate-900/50 border-slate-600 text-white"
+                  />
+                </div>
+              </div>
+
+              <p className="text-xs text-slate-500 mt-2">
+                Link público por código: <code className="text-blue-400">https://seu-dominio.com/CODIGO/bemvindo</code>
               </p>
             </div>
 

@@ -839,3 +839,17 @@ body {
 .banner-overlay-content .banner-btn-outline:hover {
   background: rgba(255, 255, 255, 0.15) !important;
 }
+
+/* ============================================
+   Public Welcome Page
+   ============================================ */
+.welcome-page-shell {
+  background:
+    radial-gradient(1200px 500px at 20% 0%, rgba(6, 182, 212, 0.18), transparent),
+    radial-gradient(900px 400px at 90% 10%, rgba(59, 130, 246, 0.2), transparent),
+    #020617;
+}
+
+.welcome-page-content {
+  font-size: 1rem !important;
+}

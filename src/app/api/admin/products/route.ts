@@ -51,7 +51,25 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { id, name, description, icon_name, image, color, url, shop_link, modal_html, price, duration_months, is_lifetime, features, active } = body;
+    const {
+      id,
+      name,
+      description,
+      icon_name,
+      image,
+      color,
+      url,
+      shop_link,
+      modal_html,
+      welcome_html,
+      welcome_button_text,
+      welcome_button_url,
+      price,
+      duration_months,
+      is_lifetime,
+      features,
+      active,
+    } = body;
 
     if (!id || !name || !description || !url) {
       return NextResponse.json({ error: 'Campos obrigatórios: id, name, description, url' }, { status: 400 });
@@ -67,6 +85,9 @@ export async function POST(request: NextRequest) {
       url,
       shop_link: shop_link || '',
       modal_html: modal_html || '',
+      welcome_html: welcome_html || '',
+      welcome_button_text: welcome_button_text || 'Acessar site',
+      welcome_button_url: welcome_button_url || url,
       price: price || 0,
       duration_months: duration_months || 3,
       is_lifetime: is_lifetime || false,
