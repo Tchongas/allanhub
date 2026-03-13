@@ -31,11 +31,17 @@ export default async function PublicWelcomePage({ params }: WelcomePageProps) {
     `<h2>Compra confirmada 🎉</h2><p>Seu acesso ao <strong>${product.name}</strong> está pronto. Clique no botão abaixo para continuar.</p>`;
 
   return (
-    <main className="min-h-screen welcome-page-shell px-5 py-8 sm:px-8 sm:py-12">
-      <div className="mx-auto w-full max-w-4xl rounded-3xl border border-slate-700/50 bg-slate-900/80 p-6 shadow-2xl shadow-black/40 backdrop-blur-sm sm:p-8">
-        <div className="mb-6 text-center sm:mb-8">
+    <main className="min-h-screen welcome-page-shell px-4 py-6 sm:px-8 sm:py-12">
+      <div className="welcome-page-card mx-auto w-full max-w-4xl rounded-3xl border border-slate-700/50 bg-slate-900/80 p-5 shadow-2xl shadow-black/40 backdrop-blur-sm sm:p-8">
+        <div className="mb-6 border-b border-slate-700/60 pb-6 text-center sm:mb-8 sm:pb-7">
           <p className="text-xs uppercase tracking-[0.2em] text-cyan-300/80">Boas-vindas</p>
           <h1 className="mt-2 text-3xl font-semibold text-white sm:text-4xl">{product.name}</h1>
+          <p className="mx-auto mt-3 max-w-2xl text-sm text-slate-300 sm:text-base">
+            Sua compra está confirmada. Leia as orientações abaixo e clique no botão para continuar com segurança.
+          </p>
+          <p className="mt-3 inline-flex items-center rounded-full border border-cyan-400/30 bg-cyan-500/10 px-3 py-1 text-xs font-medium text-cyan-200">
+            Código: {code}
+          </p>
         </div>
 
         <section
@@ -43,12 +49,12 @@ export default async function PublicWelcomePage({ params }: WelcomePageProps) {
           dangerouslySetInnerHTML={{ __html: welcomeHtml }}
         />
 
-        <div className="mt-8 flex justify-center">
+        <div className="welcome-cta-wrap mt-7 flex justify-center border-t border-slate-700/60 pt-6 sm:mt-8 sm:pt-7">
           <a
             href={buttonUrl}
             target={isInternalCta ? undefined : '_blank'}
             rel={isInternalCta ? undefined : 'noopener noreferrer'}
-            className="inline-flex min-h-12 items-center justify-center rounded-xl bg-cyan-500 px-7 text-base font-semibold text-slate-950 transition hover:bg-cyan-400"
+            className="welcome-cta-button inline-flex min-h-12 items-center justify-center rounded-xl bg-cyan-500 px-7 text-base font-semibold text-slate-950 transition hover:bg-cyan-400"
           >
             {buttonText}
           </a>

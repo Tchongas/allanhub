@@ -240,17 +240,37 @@ export default function AdminPage() {
 <p>Parabéns! Seu pagamento foi aprovado e sua compra já está registrada.</p>
 
 <div class="success-box">
-  <strong>Próximo passo:</strong> Clique no botão abaixo para abrir o produto.
+  <strong>Próximo passo:</strong> Clique no botão abaixo para ativar seu acesso.
 </div>
 
-<h3>O que vai acontecer agora?</h3>
+<div class="card mt-2 mb-2">
+  <div class="card-header">Antes de continuar</div>
+  <div class="card-body">
+    Use o mesmo e-mail da compra para evitar erro de acesso.
+  </div>
+</div>
+
+<h3>Como funciona</h3>
 <ul class="steps">
-  <li>Você será levado para o site do produto</li>
-  <li>Se necessário, faça login com o mesmo e-mail da compra</li>
-  <li>Pronto! Você já pode começar</li>
+  <li>Você será direcionado para a ativação do código</li>
+  <li>Depois disso, o produto já ficará liberado na Área de Membros</li>
+  <li>Em seguida, você pode entrar normalmente no sistema</li>
 </ul>
 
-<p class="text-muted text-small">Se tiver dúvidas, fale com nosso suporte.</p>`;
+<h3>Vídeo rápido (opcional)</h3>
+<div class="video-container">
+  <iframe
+    src="https://www.youtube.com/embed/dQw4w9WgXcQ"
+    title="Como acessar após a compra"
+    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+    allowfullscreen>
+  </iframe>
+</div>
+
+<h3>Imagem de apoio (opcional)</h3>
+<img src="https://images.unsplash.com/photo-1521587760476-6c12a4b040da?auto=format&fit=crop&w=1200&q=80" alt="Exemplo de acesso" class="no-border" />
+
+<p class="text-muted text-small">Você pode editar tudo aqui: textos, imagens, vídeo e caixas de destaque.</p>`;
 
   const emptyProduct: Omit<Product, 'created_at' | 'updated_at'> = {
     id: '',

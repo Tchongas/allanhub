@@ -853,3 +853,62 @@ body {
 .welcome-page-content {
   font-size: 1rem !important;
 }
+
+.welcome-page-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.welcome-page-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(135deg, rgba(34, 211, 238, 0.08), transparent 40%);
+}
+
+.welcome-page-content {
+  position: relative;
+  z-index: 1;
+}
+
+.welcome-page-content img,
+.welcome-page-content iframe,
+.welcome-page-content video,
+.welcome-page-content table,
+.welcome-page-content pre {
+  max-width: 100% !important;
+}
+
+.welcome-page-content iframe {
+  min-height: 220px !important;
+}
+
+.welcome-page-content .video-container {
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+.welcome-page-content .card {
+  background: rgba(15, 23, 42, 0.6) !important;
+}
+
+.welcome-cta-wrap {
+  position: relative;
+  z-index: 1;
+}
+
+.welcome-cta-button {
+  width: 100%;
+  max-width: 420px;
+}
+
+@media (max-width: 640px) {
+  .welcome-page-content {
+    font-size: 0.95rem !important;
+  }
+
+  .welcome-page-content iframe {
+    min-height: 190px !important;
+  }
+}
