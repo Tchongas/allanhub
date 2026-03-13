@@ -39,9 +39,6 @@ export default async function PublicWelcomePage({ params }: WelcomePageProps) {
           <p className="mx-auto mt-3 max-w-2xl text-sm text-slate-300 sm:text-base">
             Sua compra está confirmada. Leia as orientações abaixo e clique no botão para continuar com segurança.
           </p>
-          <p className="mt-3 inline-flex items-center rounded-full border border-cyan-400/30 bg-cyan-500/10 px-3 py-1 text-xs font-medium text-cyan-200">
-            Código: {code}
-          </p>
         </div>
 
         <section
