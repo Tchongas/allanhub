@@ -171,8 +171,8 @@ export async function generateMultipleActivationCodes(productId: string, count: 
   return codes;
 }
 
-export async function getProductByActivationCode(code: string): Promise<Product | null> {
-  const normalizedCode = code.trim().toUpperCase();
+export async function getProductByActivationCode(code: string | null | undefined): Promise<Product | null> {
+  const normalizedCode = String(code || '').trim().toUpperCase();
   if (!normalizedCode) return null;
 
   const supabase = createServiceRoleClient();

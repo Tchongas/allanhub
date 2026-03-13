@@ -15,7 +15,7 @@ const FALLBACK_PRODUCTS: Product[] = [
     modal_html: '',
     welcome_html: '',
     welcome_button_text: 'Acessar site',
-    welcome_button_url: process.env.FESTA_MAGICA_URL || 'https://festa-magica-two.vercel.app',
+    welcome_button_url: '',
     price: 49.90,
     duration_months: 3,
     is_lifetime: false,

@@ -87,7 +87,7 @@ export async function POST(request: NextRequest) {
       modal_html: modal_html || '',
       welcome_html: welcome_html || '',
       welcome_button_text: welcome_button_text || 'Acessar site',
-      welcome_button_url: welcome_button_url || url,
+      welcome_button_url: welcome_button_url || '',
       price: price || 0,
       duration_months: duration_months || 3,
       is_lifetime: is_lifetime || false,

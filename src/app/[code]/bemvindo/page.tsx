@@ -1,11 +1,11 @@
 import { getProductByActivationCode } from '@/lib/supabase/db';
 
 interface WelcomePageProps {
-  params: { code: string };
+  params: Promise<{ code: string }>;
 }
 
 export default async function PublicWelcomePage({ params }: WelcomePageProps) {
-  const { code } = params;
+  const { code } = await params;
   const product = await getProductByActivationCode(code);
 
   if (!product) {
@@ -23,7 +23,9 @@ export default async function PublicWelcomePage({ params }: WelcomePageProps) {
   }
 
   const buttonText = product.welcome_button_text?.trim() || 'Acessar site';
-  const buttonUrl = product.welcome_button_url?.trim() || product.url;
+  const defaultActivationUrl = `/code/${encodeURIComponent(code)}`;
+  const buttonUrl = product.welcome_button_url?.trim() || defaultActivationUrl;
+  const isInternalCta = buttonUrl.startsWith('/');
   const welcomeHtml =
     product.welcome_html?.trim() ||
     `<h2>Compra confirmada 🎉</h2><p>Seu acesso ao <strong>${product.name}</strong> está pronto. Clique no botão abaixo para continuar.</p>`;
@@ -44,8 +46,8 @@ export default async function PublicWelcomePage({ params }: WelcomePageProps) {
         <div className="mt-8 flex justify-center">
           <a
             href={buttonUrl}
-            target="_blank"
-            rel="noopener noreferrer"
+            target={isInternalCta ? undefined : '_blank'}
+            rel={isInternalCta ? undefined : 'noopener noreferrer'}
             className="inline-flex min-h-12 items-center justify-center rounded-xl bg-cyan-500 px-7 text-base font-semibold text-slate-950 transition hover:bg-cyan-400"
           >
             {buttonText}
