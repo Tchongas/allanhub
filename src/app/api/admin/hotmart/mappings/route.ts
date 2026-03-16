@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { createServiceRoleClient } from '@/lib/supabase/server';
 import { isAdmin } from '@/lib/admin';
+import { getCreditWalletDefinition } from '@/lib/credits/catalog';
 
 async function verifyAdmin() {
   const cookieStore = await cookies();
@@ -75,6 +76,14 @@ export async function POST(request: NextRequest) {
 
     let normalizedCreditsAmount: number | null = null;
     if (normalizedGrantMode === 'credits') {
+      const creditWalletDefinition = getCreditWalletDefinition(String(product_id).trim());
+      if (!creditWalletDefinition) {
+        return NextResponse.json(
+          { error: `Produto ${String(product_id).trim()} não está configurado no catálogo de carteiras de crédito` },
+          { status: 400 }
+        );
+      }
+
       const parsed = Number(credits_amount);
       if (!Number.isFinite(parsed) || parsed <= 0) {
         return NextResponse.json(
@@ -135,8 +144,36 @@ export async function PUT(request: NextRequest) {
     }
 
     const effectiveGrantMode = (updates.grant_mode ? String(updates.grant_mode) : 'access').toLowerCase();
+    const effectiveProductId = String(updates.product_id || '').trim();
 
     if (effectiveGrantMode === 'credits') {
+      const supabase = createServiceRoleClient();
+      let productIdForCatalogValidation = effectiveProductId;
+
+      if (!productIdForCatalogValidation) {
+        const { data: existingMapping, error: existingMappingError } = await supabase
+          .from('hotmart_product_mappings')
+          .select('product_id')
+          .eq('id', id)
+          .single();
+
+        if (existingMappingError || !existingMapping) {
+          return NextResponse.json(
+            { error: existingMappingError?.message || 'Mapeamento não encontrado para validar produto de créditos' },
+            { status: 400 }
+          );
+        }
+
+        productIdForCatalogValidation = String(existingMapping.product_id || '').trim();
+      }
+
+      if (!getCreditWalletDefinition(productIdForCatalogValidation)) {
+        return NextResponse.json(
+          { error: `Produto ${productIdForCatalogValidation} não está configurado no catálogo de carteiras de crédito` },
+          { status: 400 }
+        );
+      }
+
       const normalizedCreditsAmount = Number(updates.credits_amount);
       if (!Number.isFinite(normalizedCreditsAmount) || normalizedCreditsAmount <= 0) {
         return NextResponse.json(

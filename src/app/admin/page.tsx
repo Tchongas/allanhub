@@ -41,6 +41,7 @@ import {
 } from 'lucide-react';
 import { Button, Input, Badge } from '@/components/ui';
 import { Product, ActivationCode, Banner } from '@/types';
+import { CREDIT_WALLET_DEFINITIONS } from '@/lib/credits/catalog';
 
 interface AdminUserProduct {
   id: string;
@@ -94,6 +95,7 @@ interface HotmartMapping {
 
 interface CreditWallet {
   user_id: string;
+  wallet_key: string;
   email: string;
   name: string;
   balance: number;
@@ -103,8 +105,9 @@ interface CreditWallet {
 }
 
 interface CreditLedgerEntry {
-  id: number;
+  id: string | number;
   user_id: string;
+  wallet_key: string;
   email: string;
   name: string;
   amount: number;
@@ -160,6 +163,8 @@ export default function AdminPage() {
   const [hotmartEvents, setHotmartEvents] = useState<HotmartEvent[]>([]);
   const [creditWallets, setCreditWallets] = useState<CreditWallet[]>([]);
   const [creditLedger, setCreditLedger] = useState<CreditLedgerEntry[]>([]);
+  const [selectedCreditWalletKey, setSelectedCreditWalletKey] = useState<'all' | string>('all');
+  const [creditsLoading, setCreditsLoading] = useState(false);
   const [hotmartLoading, setHotmartLoading] = useState(false);
   const [hotmartSaving, setHotmartSaving] = useState(false);
   const [retryingEventId, setRetryingEventId] = useState<string | null>(null);
@@ -173,6 +178,33 @@ export default function AdminPage() {
     active: true,
     notes: '',
   });
+
+  const availableCreditWallets = [
+    { walletKey: 'all', shortCode: 'ALL', label: 'Todos os wallets' },
+    ...CREDIT_WALLET_DEFINITIONS.map((definition) => ({
+      walletKey: definition.walletKey,
+      shortCode: definition.shortCode,
+      label: definition.label,
+    })),
+  ];
+
+  function getWalletDisplay(walletKey?: string | null) {
+    const normalized = String(walletKey || '').trim();
+    const definition = CREDIT_WALLET_DEFINITIONS.find((item) => item.walletKey === normalized);
+    if (definition) {
+      return {
+        key: definition.walletKey,
+        shortCode: definition.shortCode,
+        label: definition.label,
+      };
+    }
+
+    return {
+      key: normalized || 'festa_magica',
+      shortCode: 'FM',
+      label: normalized || 'Festa Magica',
+    };
+  }
 
   // Banner state
   const [allBanners, setAllBanners] = useState<Banner[]>([]);
@@ -358,8 +390,15 @@ export default function AdminPage() {
     setHotmartEvents(data.events || []);
   }
 
-  async function loadCreditsData() {
-    const res = await fetch('/api/admin/hotmart/credits?wallet_limit=80&ledger_limit=120');
+  async function loadCreditsData(walletKey: string = selectedCreditWalletKey) {
+    const qs = new URLSearchParams();
+    qs.set('wallet_limit', '80');
+    qs.set('ledger_limit', '120');
+    if (walletKey && walletKey !== 'all') {
+      qs.set('wallet_key', walletKey);
+    }
+
+    const res = await fetch(`/api/admin/hotmart/credits?${qs.toString()}`);
     const data = await res.json();
     if (!res.ok) {
       throw new Error(data.error || 'Erro ao carregar dados de créditos');
@@ -369,10 +408,24 @@ export default function AdminPage() {
     setCreditLedger(data.ledger || []);
   }
 
-  async function loadHotmartData(status: 'all' | 'received' | 'processed' | 'ignored' | 'failed' = eventStatusFilter) {
+  async function refreshCreditsData(walletKey: string = selectedCreditWalletKey) {
+    setCreditsLoading(true);
+    try {
+      await loadCreditsData(walletKey);
+    } catch (err: any) {
+      setError(err.message || 'Erro ao carregar dados de créditos');
+    } finally {
+      setCreditsLoading(false);
+    }
+  }
+
+  async function loadHotmartData(
+    status: 'all' | 'received' | 'processed' | 'ignored' | 'failed' = eventStatusFilter,
+    walletKey: string = selectedCreditWalletKey
+  ) {
     setHotmartLoading(true);
     try {
-      await Promise.all([loadHotmartMappings(), loadHotmartEvents(status), loadCreditsData()]);
+      await Promise.all([loadHotmartMappings(), loadHotmartEvents(status), loadCreditsData(walletKey)]);
     } catch (err: any) {
       setError(err.message || 'Erro ao carregar dados do Hotmart');
     } finally {
@@ -927,7 +980,7 @@ export default function AdminPage() {
                 setActiveTab('hotmart');
                 if (hotmartMappings.length === 0 && hotmartEvents.length === 0 && creditWallets.length === 0 && creditLedger.length === 0) {
                   startCreateMapping();
-                  loadHotmartData('all');
+                  loadHotmartData('all', selectedCreditWalletKey);
                 }
               }}
               className={`px-4 py-2.5 text-sm font-medium rounded-t-lg transition-colors flex items-center gap-2 ${
@@ -1964,18 +2017,53 @@ export default function AdminPage() {
                   <h3 className="text-white font-semibold flex items-center gap-2">
                     <Wallet className="w-4 h-4 text-emerald-400" /> Saldos de Créditos
                   </h3>
-                  <Button variant="ghost" onClick={() => loadHotmartData(eventStatusFilter)} disabled={hotmartLoading}>
-                    <RefreshCw className={`w-4 h-4 ${hotmartLoading ? 'animate-spin' : ''}`} /> Atualizar
+                  <Button variant="ghost" onClick={() => refreshCreditsData(selectedCreditWalletKey)} disabled={creditsLoading}>
+                    <RefreshCw className={`w-4 h-4 ${creditsLoading ? 'animate-spin' : ''}`} /> Atualizar
                   </Button>
+                </div>
+
+                <div className="mb-4 rounded-lg border border-slate-700/80 bg-slate-900/40 p-3">
+                  <p className="text-xs font-medium uppercase tracking-[0.14em] text-slate-400">Wallet Scope</p>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {availableCreditWallets.map((walletOption) => {
+                      const isActive = selectedCreditWalletKey === walletOption.walletKey;
+                      return (
+                        <button
+                          key={walletOption.walletKey}
+                          type="button"
+                          onClick={() => {
+                            setSelectedCreditWalletKey(walletOption.walletKey);
+                            refreshCreditsData(walletOption.walletKey);
+                          }}
+                          className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs transition-colors ${
+                            isActive
+                              ? 'border-cyan-400/70 bg-cyan-500/15 text-cyan-200'
+                              : 'border-slate-600 bg-slate-900/60 text-slate-300 hover:border-slate-500 hover:text-white'
+                          }`}
+                        >
+                          <span className="font-semibold">{walletOption.shortCode}</span>
+                          <span>{walletOption.label}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
 
                 <div className="space-y-2 max-h-[380px] overflow-auto pr-1">
                   {creditWallets.length === 0 ? (
                     <p className="text-sm text-slate-500">Nenhuma carteira com saldo encontrada.</p>
                   ) : creditWallets.map((wallet) => (
-                    <div key={wallet.user_id} className="bg-slate-900/50 border border-slate-700 rounded-lg p-3">
+                    <div key={`${wallet.user_id}:${wallet.wallet_key || 'festa_magica'}`} className="bg-slate-900/50 border border-slate-700 rounded-lg p-3">
                       <div className="flex items-center justify-between gap-3">
                         <div className="min-w-0">
+                          {(() => {
+                            const walletDisplay = getWalletDisplay(wallet.wallet_key);
+                            return (
+                              <p className="mb-1 text-[11px] uppercase tracking-[0.1em] text-cyan-300">
+                                {walletDisplay.shortCode} · {walletDisplay.label}
+                              </p>
+                            );
+                          })()}
                           <p className="text-sm text-white font-medium truncate">{wallet.name || 'Sem nome'}</p>
                           <p className="text-xs text-slate-400 truncate">{wallet.email || wallet.user_id}</p>
                           <p className="text-xs text-slate-500 mt-1">Atualizado: {formatDateTime(wallet.updated_at)}</p>
@@ -2002,6 +2090,14 @@ export default function AdminPage() {
                     <div key={entry.id} className="bg-slate-900/50 border border-slate-700 rounded-lg p-3">
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
+                          {(() => {
+                            const walletDisplay = getWalletDisplay(entry.wallet_key);
+                            return (
+                              <p className="mb-1 text-[11px] uppercase tracking-[0.1em] text-cyan-300">
+                                {walletDisplay.shortCode} · {walletDisplay.label}
+                              </p>
+                            );
+                          })()}
                           <p className="text-sm text-white font-medium truncate">{entry.name || entry.email || entry.user_id}</p>
                           <p className="text-xs text-slate-400">Fonte: <code>{entry.source}</code></p>
                           {entry.reference_id && <p className="text-xs text-slate-500 break-all">Ref: {entry.reference_id}</p>}

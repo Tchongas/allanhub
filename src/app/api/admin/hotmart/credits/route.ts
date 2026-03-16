@@ -38,6 +38,8 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const walletLimitParam = Number(searchParams.get('wallet_limit') || 80);
     const ledgerLimitParam = Number(searchParams.get('ledger_limit') || 120);
+    const walletKeyParam = String(searchParams.get('wallet_key') || '').trim();
+    const walletKeyFilter = walletKeyParam && walletKeyParam !== 'all' ? walletKeyParam : null;
 
     const walletLimit = Number.isFinite(walletLimitParam)
       ? Math.min(Math.max(Math.floor(walletLimitParam), 1), 300)
@@ -51,20 +53,31 @@ export async function GET(request: NextRequest) {
     let walletRows: any[] | null = null;
     let walletError: { message: string } | null = null;
 
-    const walletWithLifetime = await supabase
+    const walletWithLifetimeQuery = supabase
       .from('user_credit_wallets')
-      .select('user_id, balance, lifetime_earned, lifetime_spent, updated_at')
+      .select('user_id, wallet_key, balance, lifetime_earned, lifetime_spent, updated_at')
       .order('balance', { ascending: false })
       .limit(walletLimit);
 
+    const walletWithLifetime = walletKeyFilter
+      ? await walletWithLifetimeQuery.eq('wallet_key', walletKeyFilter)
+      : await walletWithLifetimeQuery;
+
     if (!walletWithLifetime.error) {
       walletRows = walletWithLifetime.data;
-    } else if ((walletWithLifetime.error.message || '').includes('lifetime_earned')) {
-      const walletMinimal = await supabase
+    } else if (
+      (walletWithLifetime.error.message || '').includes('lifetime_earned') ||
+      (walletWithLifetime.error.message || '').includes('wallet_key')
+    ) {
+      const walletMinimalQuery = supabase
         .from('user_credit_wallets')
         .select('user_id, balance, updated_at')
         .order('balance', { ascending: false })
         .limit(walletLimit);
+
+      const walletMinimal = walletKeyFilter
+        ? await walletMinimalQuery
+        : await walletMinimalQuery;
 
       walletRows = walletMinimal.data;
       walletError = walletMinimal.error ? { message: walletMinimal.error.message } : null;
@@ -76,11 +89,34 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: walletError.message }, { status: 500 });
     }
 
-    const { data: ledgerRows, error: ledgerError } = await supabase
+    const ledgerQuery = supabase
       .from('credit_ledger')
-      .select('id, user_id, amount, entry_type, source, reference_id, created_at')
+      .select('id, user_id, wallet_key, amount, entry_type, source, reason, reference_id, created_at')
       .order('created_at', { ascending: false })
       .limit(ledgerLimit);
+
+    const ledgerWithWallet = walletKeyFilter
+      ? await ledgerQuery.eq('wallet_key', walletKeyFilter)
+      : await ledgerQuery;
+
+    let ledgerRows: any[] | null = null;
+    let ledgerError: { message: string } | null = null;
+
+    if (!ledgerWithWallet.error) {
+      ledgerRows = ledgerWithWallet.data;
+    } else if ((ledgerWithWallet.error.message || '').includes('wallet_key') || (ledgerWithWallet.error.message || '').includes('reason')) {
+      const legacyLedgerQuery = supabase
+        .from('credit_ledger')
+        .select('id, user_id, amount, entry_type, source, reference_id, created_at')
+        .order('created_at', { ascending: false })
+        .limit(ledgerLimit);
+
+      const legacyLedger = await legacyLedgerQuery;
+      ledgerRows = legacyLedger.data;
+      ledgerError = legacyLedger.error ? { message: legacyLedger.error.message } : null;
+    } else {
+      ledgerError = { message: ledgerWithWallet.error.message };
+    }
 
     if (ledgerError) {
       return NextResponse.json({ error: ledgerError.message }, { status: 500 });
@@ -116,6 +152,7 @@ export async function GET(request: NextRequest) {
 
     const wallets = (walletRows || []).map((row) => ({
       user_id: row.user_id,
+      wallet_key: row.wallet_key || 'festa_magica',
       email: usersById[row.user_id as string]?.email || '',
       name: usersById[row.user_id as string]?.name || '',
       balance: Number(row.balance || 0),
@@ -127,16 +164,21 @@ export async function GET(request: NextRequest) {
     const ledger = (ledgerRows || []).map((row) => ({
       id: row.id,
       user_id: row.user_id,
+      wallet_key: row.wallet_key || 'festa_magica',
       email: usersById[row.user_id as string]?.email || '',
       name: usersById[row.user_id as string]?.name || '',
       amount: Number(row.amount || 0),
       entry_type: row.entry_type,
-      source: row.source,
+      source: row.source || row.reason || '',
       reference_id: row.reference_id,
       created_at: row.created_at,
     }));
 
-    return NextResponse.json({ wallets, ledger });
+    return NextResponse.json({
+      wallets,
+      ledger,
+      wallet_key: walletKeyFilter || 'all',
+    });
   } catch (error) {
     console.error('Admin hotmart credits GET error:', error);
     return NextResponse.json({ error: 'Erro ao buscar dados de créditos' }, { status: 500 });

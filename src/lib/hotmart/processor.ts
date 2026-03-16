@@ -1,5 +1,6 @@
 import { createServiceRoleClient } from '@/lib/supabase/server';
 import { getProduct } from '@/lib/products';
+import { grantCreditsForProduct } from '@/lib/credits/grants';
 import type { HotmartWebhookPayload, HotmartProcessResult } from './types';
 
 const GRANT_EVENTS = new Set(['PURCHASE_APPROVED', 'PURCHASE_COMPLETE']);
@@ -226,35 +227,37 @@ async function grantCreditsToUser(
   creditsAmount: number,
   transaction: string,
   eventId: string,
-  eventName: string
+  eventName: string,
+  productUcode: string,
+  buyerEmail: string,
+  hotmartProductId: string,
+  hotmartProductName: string
 ): Promise<boolean> {
   if (await hasApprovedGrantRecord(userId, productId, transaction)) {
     return false;
   }
 
-  const supabase = createServiceRoleClient();
-
   if (creditsAmount <= 0) {
     throw new Error(`Invalid credits amount for mapped product ${productId}: ${creditsAmount}`);
   }
 
-  const creditReference = `hotmart:${transaction}:${productId}:grant`;
-  const { error: creditGrantError } = await supabase.rpc('grant_credits', {
-    p_user_id: userId,
-    p_amount: creditsAmount,
-    p_source: 'hotmart_purchase',
-    p_reference_id: creditReference,
-    p_metadata: {
-      event_id: eventId,
-      event_name: eventName,
-      product_id: productId,
+  await grantCreditsForProduct({
+    userId,
+    productId,
+    amount: creditsAmount,
+    referenceId: transaction,
+    eventId,
+    eventName,
+    meta: {
+      source: 'hotmart',
+      ucode: productUcode,
+      hotmart_product_id: hotmartProductId,
+      hotmart_product_name: hotmartProductName,
+      email: buyerEmail,
       transaction,
+      hub_product_id: productId,
     },
   });
-
-  if (creditGrantError) {
-    throw new Error(`Failed to grant credits: ${creditGrantError.message}`);
-  }
 
   await upsertHotmartGrantRecord({
     userId,
@@ -327,6 +330,8 @@ export async function processHotmartWebhookEvent(payload: HotmartWebhookPayload)
   const normalizedEmail = normalizeEmail(payload.data?.buyer?.email);
   const buyerName = String(payload.data?.buyer?.name || '').trim();
   const productUcode = String(payload.data?.product?.ucode || '').trim();
+  const hotmartProductId = String(payload.data?.product?.id || '').trim();
+  const hotmartProductName = String(payload.data?.product?.name || '').trim();
 
   if (!eventId) {
     return { accepted: false, status: 'failed', reason: 'Missing event id' };
@@ -367,7 +372,11 @@ export async function processHotmartWebhookEvent(payload: HotmartWebhookPayload)
           Number(creditConfig.creditsAmount || 0),
           transaction,
           eventId,
-          eventName
+          eventName,
+          productUcode,
+          normalizedEmail,
+          hotmartProductId,
+          hotmartProductName
         )
       : await grantAccessToUser(hubUser.id, creditConfig.productId, transaction, eventId, eventName);
     return { accepted: true, status: 'processed', grantCreated };
