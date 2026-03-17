@@ -23,7 +23,7 @@ export const CREDIT_WALLET_DEFINITIONS: readonly CreditWalletDefinition[] = [
     shortCode: 'FM',
     productId: 'festa-magica',
     label: 'Festa Magica',
-    grantReason: 'hotmart_purchase',
+    grantReason: 'purchase',
     referenceType: 'hotmart',
   },
   // Template for next product:
