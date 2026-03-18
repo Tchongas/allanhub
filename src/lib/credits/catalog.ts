@@ -24,7 +24,7 @@ export const CREDIT_WALLET_DEFINITIONS: readonly CreditWalletDefinition[] = [
     productId: 'festa-magica',
     label: 'Festa Magica',
     grantReason: 'purchase',
-    referenceType: 'hotmart',
+    referenceType: 'webhook_event',
   },
   // Template for next product:
   // {
@@ -32,8 +32,8 @@ export const CREDIT_WALLET_DEFINITIONS: readonly CreditWalletDefinition[] = [
   //   shortCode: 'CS',
   //   productId: 'car-studio',
   //   label: 'Car Studio',
-  //   grantReason: 'hotmart_purchase',
-  //   referenceType: 'hotmart',
+  //   grantReason: 'purchase',
+  //   referenceType: 'webhook_event',
   // },
 ] as const;
 
