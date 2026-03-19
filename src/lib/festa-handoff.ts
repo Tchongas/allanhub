@@ -1,6 +1,7 @@
 export const FESTA_PRODUCT_ID = 'festa-magica';
 
 const DEFAULT_CALLBACK_PATH = '/api/auth/callback';
+const DEFAULT_CALLBACK_PATHS = [DEFAULT_CALLBACK_PATH, '/auth/callback/google'];
 const ALLOWLIST_ENV_KEYS = ['FESTA_CALLBACK_ALLOWLIST', 'FESTA_HANDOFF_ALLOWLIST'];
 
 export type FestaHandoffValidationError =
@@ -62,16 +63,29 @@ export function getAllowedFestaReturnToList(env: NodeJS.ProcessEnv = process.env
     }
   }
 
-  const festaBaseUrl = String(env.FESTA_MAGICA_URL || '').trim();
-  if (festaBaseUrl) {
-    try {
-      const callbackUrl = new URL(DEFAULT_CALLBACK_PATH, festaBaseUrl).toString();
-      const normalized = normalizeAbsoluteHttpUrl(callbackUrl);
-      if (normalized) {
-        allowlist.add(normalized);
+  const festaBaseUrlCandidates = [
+    String(env.FESTA_MAGICA_URL || '').trim(),
+    String(env.FESTA_MAGICA_URLS || '').trim(),
+  ];
+
+  for (const rawCandidate of festaBaseUrlCandidates) {
+    if (!rawCandidate) continue;
+
+    for (const value of rawCandidate.split(',')) {
+      const festaBaseUrl = String(value || '').trim();
+      if (!festaBaseUrl) continue;
+
+      for (const callbackPath of DEFAULT_CALLBACK_PATHS) {
+        try {
+          const callbackUrl = new URL(callbackPath, festaBaseUrl).toString();
+          const normalized = normalizeAbsoluteHttpUrl(callbackUrl);
+          if (normalized) {
+            allowlist.add(normalized);
+          }
+        } catch {
+          // Ignore malformed Festa URL values and rely on other allowlist entries.
+        }
       }
-    } catch {
-      // Ignore malformed FESTA_MAGICA_URL and rely on explicit allowlist.
     }
   }
 

@@ -5,9 +5,28 @@ import {
   FESTA_PRODUCT_ID,
   buildFestaCallbackRedirectUrl,
   buildHubMembersErrorUrl,
+  getAllowedFestaReturnToList,
   validateFestaHandoffRequest,
 } from '@/lib/festa-handoff';
 import { createHubToken } from '@/lib/hub/jwt';
+
+test('allowlist includes callback URLs for FESTA_MAGICA_URL and FESTA_MAGICA_URLS', () => {
+  const allowlist = getAllowedFestaReturnToList({
+    ...process.env,
+    FESTA_MAGICA_URL: 'https://membros.allanfulcher.com',
+    FESTA_MAGICA_URLS: 'https://festa-magica.allanfulcher.com',
+  });
+
+  assert.deepEqual(
+    allowlist.sort(),
+    [
+      'https://festa-magica.allanfulcher.com/auth/callback/google',
+      'https://festa-magica.allanfulcher.com/api/auth/callback',
+      'https://membros.allanfulcher.com/auth/callback/google',
+      'https://membros.allanfulcher.com/api/auth/callback',
+    ].sort()
+  );
+});
 
 test('blocks invalid return_to', () => {
   const params = new URLSearchParams({
