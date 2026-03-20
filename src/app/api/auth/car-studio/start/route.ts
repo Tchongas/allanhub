@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { createServiceRoleClient } from '@/lib/supabase/server';
 import { ensureHubUserForAuthUser } from '@/lib/hub-user';
-import { createHubToken, generateNonce } from '@/lib/hub/jwt';
+import { createHubToken } from '@/lib/hub/jwt';
 import {
   buildCarStudioCallbackRedirectUrl,
   buildCarStudioHandoffResumePath,
@@ -14,7 +14,10 @@ function redirectToHubMembersWithError(request: NextRequest, errorCode: string) 
   return NextResponse.redirect(buildHubMembersErrorUrlForCarStudio(request.nextUrl.origin, errorCode));
 }
 
-function buildGoogleResumeRedirect(request: NextRequest, params: { product: string; returnTo: string; redirectTo: string | null }) {
+function buildGoogleResumeRedirect(
+  request: NextRequest,
+  params: { product: string; returnTo: string; nonce: string; redirectTo: string | null }
+) {
   const resumePath = buildCarStudioHandoffResumePath(params);
   const googleAuthUrl = new URL('/api/auth/google', request.url);
   googleAuthUrl.searchParams.set('redirect_to', resumePath);
@@ -54,7 +57,7 @@ export async function GET(request: NextRequest) {
       return redirectToHubMembersWithError(request, validation.error || 'car_studio_invalid_request');
     }
 
-    const { product, returnTo, redirectTo } = validation.params;
+    const { product, returnTo, nonce, redirectTo } = validation.params;
 
     const cookieStore = await cookies();
     const sessionToken = cookieStore.get('hub_session')?.value;
@@ -95,7 +98,7 @@ export async function GET(request: NextRequest) {
       email: String(user.email).trim().toLowerCase(),
       name: hubUser.name || (user.user_metadata?.name as string | undefined),
       product,
-      nonce: generateNonce(),
+      nonce,
     });
 
     logCarStudioHandoffSuccess({ userId: hubUser.id, product });

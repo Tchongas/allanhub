@@ -3,6 +3,7 @@ import test from 'node:test';
 import {
   CAR_STUDIO_PRODUCT_ID,
   buildCarStudioCallbackRedirectUrl,
+  buildCarStudioHandoffResumePath,
   buildHubMembersErrorUrlForCarStudio,
   getAllowedCarStudioReturnToList,
   validateCarStudioHandoffRequest,
@@ -30,6 +31,7 @@ test('blocks invalid return_to for car studio', () => {
   const params = new URLSearchParams({
     product: CAR_STUDIO_PRODUCT_ID,
     return_to: 'https://evil.example.com/api/auth/callback',
+    nonce: '45f7d6dc-8f08-45d2-a8f2-cf54393a1548',
   });
 
   const result = validateCarStudioHandoffRequest(params, ['https://car.example.com/api/auth/callback']);
@@ -38,10 +40,23 @@ test('blocks invalid return_to for car studio', () => {
   assert.equal(result.error, 'car_studio_invalid_return_to');
 });
 
+test('blocks missing nonce for car studio', () => {
+  const params = new URLSearchParams({
+    product: CAR_STUDIO_PRODUCT_ID,
+    return_to: 'https://car.example.com/api/auth/callback',
+  });
+
+  const result = validateCarStudioHandoffRequest(params, ['https://car.example.com/api/auth/callback']);
+
+  assert.equal(result.ok, false);
+  assert.equal(result.error, 'car_studio_invalid_nonce');
+});
+
 test('blocks invalid redirect_to for car studio', () => {
   const params = new URLSearchParams({
     product: CAR_STUDIO_PRODUCT_ID,
     return_to: 'https://car.example.com/api/auth/callback',
+    nonce: '45f7d6dc-8f08-45d2-a8f2-cf54393a1548',
     redirect_to: 'https://evil.example.com/steal',
   });
 
@@ -73,4 +88,17 @@ test('success redirect includes token and safe redirect_to for car studio', () =
   assert.equal(parsed.pathname, '/api/auth/callback');
   assert.equal(parsed.searchParams.get('token'), 'signed.jwt.token');
   assert.equal(parsed.searchParams.get('redirect_to'), '/create');
+});
+
+test('resume path keeps incoming nonce for oauth roundtrip', () => {
+  const resumePath = buildCarStudioHandoffResumePath({
+    product: CAR_STUDIO_PRODUCT_ID,
+    returnTo: 'https://car.example.com/api/auth/callback',
+    nonce: '45f7d6dc-8f08-45d2-a8f2-cf54393a1548',
+    redirectTo: '/create',
+  });
+
+  const parsed = new URL(resumePath, 'https://hub.example.com');
+  assert.equal(parsed.pathname, '/api/auth/car-studio/start');
+  assert.equal(parsed.searchParams.get('nonce'), '45f7d6dc-8f08-45d2-a8f2-cf54393a1548');
 });

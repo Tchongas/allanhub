@@ -7,11 +7,13 @@ const ALLOWLIST_ENV_KEYS = ['CAR_STUDIO_CALLBACK_ALLOWLIST', 'CAR_STUDIO_HANDOFF
 export type CarStudioHandoffValidationError =
   | 'car_studio_invalid_product'
   | 'car_studio_invalid_return_to'
+  | 'car_studio_invalid_nonce'
   | 'car_studio_invalid_redirect_to';
 
 export interface CarStudioHandoffParams {
   product: string;
   returnTo: string;
+  nonce: string;
   redirectTo: string | null;
 }
 
@@ -106,6 +108,11 @@ export function validateCarStudioHandoffRequest(
     return { ok: false, error: 'car_studio_invalid_return_to' };
   }
 
+  const nonce = String(searchParams.get('nonce') || '').trim();
+  if (!nonce || nonce.length > 128) {
+    return { ok: false, error: 'car_studio_invalid_nonce' };
+  }
+
   const redirectToRaw = searchParams.get('redirect_to');
   let redirectTo: string | null = null;
 
@@ -122,6 +129,7 @@ export function validateCarStudioHandoffRequest(
     params: {
       product,
       returnTo: normalizedReturnTo,
+      nonce,
       redirectTo,
     },
   };
@@ -131,6 +139,7 @@ export function buildCarStudioHandoffResumePath(params: CarStudioHandoffParams):
   const query = new URLSearchParams({
     product: params.product,
     return_to: params.returnTo,
+    nonce: params.nonce,
   });
 
   if (params.redirectTo) {
