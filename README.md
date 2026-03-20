@@ -56,6 +56,9 @@ Preencha:
 - `HUB_JWT_SECRET` (secret compartilhado com Festa para validação do token de handoff)
 - `FESTA_MAGICA_URL` (URL do Festa Mágica)
 - `FESTA_CALLBACK_ALLOWLIST` (lista de callbacks permitidos, separados por vírgula)
+- `CAR_STUDIO_URL` (URL base do Car Studio)
+- `CAR_STUDIO_URLS` (URLs extras do Car Studio, separadas por vírgula)
+- `CAR_STUDIO_CALLBACK_ALLOWLIST` (lista explícita de callbacks do Car Studio)
 - `HOTMART_HOTTOK` (token enviado no header `X-HOTMART-HOTTOK`)
 
 ### 4. Gerar códigos de ativação
@@ -111,6 +114,7 @@ src/
 | `/api/auth/google` | GET | Iniciar login com Google |
 | `/api/auth/callback` | GET | Callback do OAuth |
 | `/api/auth/festa-magica/start` | GET | Handoff OAuth + validação de acesso + redirect seguro para callback do Festa |
+| `/api/auth/car-studio/start` | GET | Handoff OAuth + redirect seguro para callback do Car Studio |
 | `/api/auth/verify` | GET | Verificar sessão |
 | `/api/auth/logout` | POST | Logout |
 | `/api/products/activate` | POST | Ativar código |

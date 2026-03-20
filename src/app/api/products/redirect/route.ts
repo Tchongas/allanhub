@@ -6,6 +6,20 @@ import { cookies } from 'next/headers';
 import { createServiceRoleClient } from '@/lib/supabase/server';
 import { ensureHubUserForAuthUser } from '@/lib/hub-user';
 
+const CAR_STUDIO_PRODUCT_ID = 'car-studio';
+
+function isSafeRelativePath(value: string): boolean {
+  if (!value.startsWith('/')) return false;
+  if (value.startsWith('//')) return false;
+
+  try {
+    const parsed = new URL(value, 'https://hub.local');
+    return parsed.origin === 'https://hub.local';
+  } catch {
+    return false;
+  }
+}
+
 export async function GET(request: NextRequest) {
   try {
     const productId = request.nextUrl.searchParams.get('product');
@@ -44,6 +58,31 @@ export async function GET(request: NextRequest) {
     const userProduct = await getActiveUserProduct(hubUser.id, productId);
     if (!userProduct) {
       return NextResponse.redirect(new URL(`/?error=no_access&product=${productId}`, request.url));
+    }
+
+    if (product.id === CAR_STUDIO_PRODUCT_ID) {
+      const handoffBaseUrl = String(process.env.CAR_STUDIO_URL || product.url || '').trim();
+      if (!handoffBaseUrl) {
+        return NextResponse.redirect(new URL('/?error=car_studio_missing_url', request.url));
+      }
+
+      let returnTo: string;
+      try {
+        returnTo = new URL('/api/auth/callback', handoffBaseUrl).toString();
+      } catch {
+        return NextResponse.redirect(new URL('/?error=car_studio_invalid_url', request.url));
+      }
+
+      const handoffUrl = new URL('/api/auth/car-studio/start', request.url);
+      handoffUrl.searchParams.set('product', CAR_STUDIO_PRODUCT_ID);
+      handoffUrl.searchParams.set('return_to', returnTo);
+
+      const redirectTo = String(request.nextUrl.searchParams.get('redirect_to') || '').trim();
+      if (redirectTo && isSafeRelativePath(redirectTo)) {
+        handoffUrl.searchParams.set('redirect_to', redirectTo);
+      }
+
+      return NextResponse.redirect(handoffUrl);
     }
 
     const token = await generateProductToken({

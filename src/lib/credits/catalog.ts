@@ -26,15 +26,14 @@ export const CREDIT_WALLET_DEFINITIONS: readonly CreditWalletDefinition[] = [
     grantReason: 'purchase',
     referenceType: 'webhook_event',
   },
-  // Template for next product:
-  // {
-  //   walletKey: 'car_studio',
-  //   shortCode: 'CS',
-  //   productId: 'car-studio',
-  //   label: 'Car Studio',
-  //   grantReason: 'purchase',
-  //   referenceType: 'webhook_event',
-  // },
+  {
+    walletKey: 'car_studio',
+    shortCode: 'CS',
+    productId: 'car-studio',
+    label: 'Car Studio',
+    grantReason: 'purchase',
+    referenceType: 'webhook_event',
+  },
 ] as const;
 
 const DEFINITION_BY_PRODUCT_ID = new Map(
