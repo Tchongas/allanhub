@@ -8,9 +8,21 @@ export async function GET(request: NextRequest) {
   const code = requestUrl.searchParams.get('code');
   const origin = requestUrl.origin;
 
+  console.info('hub_oauth_callback_hit', {
+    url: requestUrl.toString(),
+    has_code: Boolean(code),
+  });
+
   if (code) {
     const supabase = await createSupabaseServer();
     const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+
+    console.info('hub_oauth_callback_exchange_result', {
+      has_error: Boolean(error),
+      error_message: error?.message || null,
+      has_session: Boolean(data.session),
+      user_id: data.user?.id || null,
+    });
 
     if (!error && data.session) {
       await ensureHubUserForAuthUser(data.user);
@@ -30,13 +42,26 @@ export async function GET(request: NextRequest) {
         cookieStore.delete('auth_redirect_to');
         // Only allow relative paths to prevent open redirect
         if (redirectTo.startsWith('/')) {
+          console.info('hub_oauth_callback_redirect', {
+            target: `${origin}${redirectTo}`,
+            source: 'auth_redirect_to_cookie',
+          });
           return NextResponse.redirect(`${origin}${redirectTo}`);
         }
       }
 
+      console.info('hub_oauth_callback_redirect', {
+        target: `${origin}/`,
+        source: 'default_root',
+      });
+
       return NextResponse.redirect(`${origin}/`);
     }
   }
+
+  console.warn('hub_oauth_callback_failed', {
+    has_code: Boolean(code),
+  });
 
   return NextResponse.redirect(`${origin}/login?error=auth_failed`);
 }

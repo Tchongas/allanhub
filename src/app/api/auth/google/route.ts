@@ -5,6 +5,7 @@ import { cookies } from 'next/headers';
 export async function GET(request: NextRequest) {
   const supabase = await createSupabaseServer();
   const origin = request.nextUrl.origin;
+  const callbackUrl = `${origin}/api/auth/callback`;
 
   // Store redirect_to in a cookie so we can use it after OAuth callback
   const redirectTo = request.nextUrl.searchParams.get('redirect_to');
@@ -19,11 +20,25 @@ export async function GET(request: NextRequest) {
     });
   }
 
+  console.info('hub_oauth_google_start', {
+    origin,
+    callback_url: callbackUrl,
+    has_redirect_to: Boolean(redirectTo),
+    redirect_to: redirectTo || null,
+  });
+
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
-      redirectTo: `${origin}/api/auth/callback`,
+      redirectTo: callbackUrl,
     },
+  });
+
+  console.info('hub_oauth_google_signin_result', {
+    has_error: Boolean(error),
+    error_message: error?.message || null,
+    redirect_host: data.url ? new URL(data.url).host : null,
+    redirect_url_preview: data.url ? data.url.slice(0, 200) : null,
   });
 
   if (error || !data.url) {
