@@ -50,82 +50,145 @@ export async function GET(request: NextRequest) {
 
     const supabase = createServiceRoleClient();
 
-    let walletRows: any[] | null = null;
-    let walletError: { message: string } | null = null;
+    const includeFestaWallet = !walletKeyFilter || walletKeyFilter === 'festa_magica';
+    const includeCarStudioWallet = !walletKeyFilter || walletKeyFilter === 'car_studio';
 
-    const walletWithLifetimeQuery = supabase
-      .from('user_credit_wallets')
-      .select('user_id, wallet_key, balance, lifetime_earned, lifetime_spent, updated_at')
-      .order('balance', { ascending: false })
-      .limit(walletLimit);
+    const normalizedWalletRows: Array<{
+      user_id: string;
+      wallet_key: string;
+      balance: number;
+      lifetime_earned: number;
+      lifetime_spent: number;
+      updated_at: string;
+    }> = [];
 
-    const walletWithLifetime = walletKeyFilter
-      ? await walletWithLifetimeQuery.eq('wallet_key', walletKeyFilter)
-      : await walletWithLifetimeQuery;
+    const normalizedLedgerRows: Array<{
+      id: string | number;
+      user_id: string;
+      wallet_key: string;
+      amount: number;
+      entry_type: string;
+      source: string;
+      reference_id: string | null;
+      created_at: string;
+    }> = [];
 
-    if (!walletWithLifetime.error) {
-      walletRows = walletWithLifetime.data;
-    } else if (
-      (walletWithLifetime.error.message || '').includes('lifetime_earned') ||
-      (walletWithLifetime.error.message || '').includes('wallet_key')
-    ) {
-      const walletMinimalQuery = supabase
+    if (includeFestaWallet) {
+      const festaWallets = await supabase
         .from('user_credit_wallets')
-        .select('user_id, balance, updated_at')
+        .select('user_id, balance, lifetime_earned, lifetime_spent, updated_at')
         .order('balance', { ascending: false })
         .limit(walletLimit);
 
-      const walletMinimal = walletKeyFilter
-        ? await walletMinimalQuery
-        : await walletMinimalQuery;
+      if (festaWallets.error) {
+        return NextResponse.json({ error: festaWallets.error.message }, { status: 500 });
+      }
 
-      walletRows = walletMinimal.data;
-      walletError = walletMinimal.error ? { message: walletMinimal.error.message } : null;
-    } else {
-      walletError = { message: walletWithLifetime.error.message };
-    }
+      normalizedWalletRows.push(
+        ...(festaWallets.data || []).map((row) => ({
+          user_id: row.user_id as string,
+          wallet_key: 'festa_magica',
+          balance: Number((row as any).balance || 0),
+          lifetime_earned: Number((row as any).lifetime_earned || 0),
+          lifetime_spent: Number((row as any).lifetime_spent || 0),
+          updated_at: String((row as any).updated_at || ''),
+        }))
+      );
 
-    if (walletError) {
-      return NextResponse.json({ error: walletError.message }, { status: 500 });
-    }
-
-    const ledgerQuery = supabase
-      .from('credit_ledger')
-      .select('id, user_id, wallet_key, amount, entry_type, source, reason, reference_id, created_at')
-      .order('created_at', { ascending: false })
-      .limit(ledgerLimit);
-
-    const ledgerWithWallet = walletKeyFilter
-      ? await ledgerQuery.eq('wallet_key', walletKeyFilter)
-      : await ledgerQuery;
-
-    let ledgerRows: any[] | null = null;
-    let ledgerError: { message: string } | null = null;
-
-    if (!ledgerWithWallet.error) {
-      ledgerRows = ledgerWithWallet.data;
-    } else if ((ledgerWithWallet.error.message || '').includes('wallet_key') || (ledgerWithWallet.error.message || '').includes('reason')) {
-      const legacyLedgerQuery = supabase
+      const festaLedger = await supabase
         .from('credit_ledger')
-        .select('id, user_id, amount, entry_type, source, reference_id, created_at')
+        .select('id, user_id, direction, amount, entry_type, source, reason, reference_id, created_at')
         .order('created_at', { ascending: false })
         .limit(ledgerLimit);
 
-      const legacyLedger = await legacyLedgerQuery;
-      ledgerRows = legacyLedger.data;
-      ledgerError = legacyLedger.error ? { message: legacyLedger.error.message } : null;
-    } else {
-      ledgerError = { message: ledgerWithWallet.error.message };
+      if (festaLedger.error) {
+        return NextResponse.json({ error: festaLedger.error.message }, { status: 500 });
+      }
+
+      normalizedLedgerRows.push(
+        ...(festaLedger.data || []).map((row) => {
+          const direction = String((row as any).direction || '').toLowerCase();
+          const rawAmount = Number((row as any).amount || 0);
+          const signedAmount = direction === 'debit' ? -rawAmount : rawAmount;
+
+          return {
+            id: (row as any).id,
+            user_id: (row as any).user_id as string,
+            wallet_key: 'festa_magica',
+            amount: signedAmount,
+            entry_type: String((row as any).entry_type || direction || 'adjustment'),
+            source: String((row as any).source || (row as any).reason || ''),
+            reference_id: ((row as any).reference_id as string | null) || null,
+            created_at: String((row as any).created_at || ''),
+          };
+        })
+      );
     }
 
-    if (ledgerError) {
-      return NextResponse.json({ error: ledgerError.message }, { status: 500 });
+    if (includeCarStudioWallet) {
+      const carStudioWallets = await supabase
+        .from('cs_user_wallets')
+        .select('user_id, wallet_key, balance, lifetime_earned, lifetime_spent, updated_at')
+        .order('balance', { ascending: false })
+        .limit(walletLimit);
+
+      if (carStudioWallets.error) {
+        return NextResponse.json({ error: carStudioWallets.error.message }, { status: 500 });
+      }
+
+      normalizedWalletRows.push(
+        ...(carStudioWallets.data || []).map((row) => ({
+          user_id: row.user_id as string,
+          wallet_key: String((row as any).wallet_key || 'car_studio'),
+          balance: Number((row as any).balance || 0),
+          lifetime_earned: Number((row as any).lifetime_earned || 0),
+          lifetime_spent: Number((row as any).lifetime_spent || 0),
+          updated_at: String((row as any).updated_at || ''),
+        }))
+      );
+
+      const carStudioLedger = await supabase
+        .from('cs_credit_ledger')
+        .select('id, user_id, wallet_key, direction, amount, entry_type, reason, reference_id, created_at')
+        .order('created_at', { ascending: false })
+        .limit(ledgerLimit);
+
+      if (carStudioLedger.error) {
+        return NextResponse.json({ error: carStudioLedger.error.message }, { status: 500 });
+      }
+
+      normalizedLedgerRows.push(
+        ...(carStudioLedger.data || []).map((row) => {
+          const direction = String((row as any).direction || '').toLowerCase();
+          const rawAmount = Number((row as any).amount || 0);
+          const signedAmount = direction === 'debit' ? -rawAmount : rawAmount;
+
+          return {
+            id: (row as any).id,
+            user_id: (row as any).user_id as string,
+            wallet_key: String((row as any).wallet_key || 'car_studio'),
+            amount: signedAmount,
+            entry_type: String((row as any).entry_type || direction || 'adjustment'),
+            source: String((row as any).reason || ''),
+            reference_id: ((row as any).reference_id as string | null) || null,
+            created_at: String((row as any).created_at || ''),
+          };
+        })
+      );
     }
+
+    const walletRows = normalizedWalletRows
+      .sort((a, b) => b.balance - a.balance)
+      .slice(0, walletLimit);
+
+    const ledgerRows = normalizedLedgerRows
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+      .slice(0, ledgerLimit);
 
     const userIds = Array.from(
       new Set([
-        ...(walletRows || []).map((row) => row.user_id as string),
-        ...(ledgerRows || []).map((row) => row.user_id as string),
+        ...walletRows.map((row) => row.user_id as string),
+        ...ledgerRows.map((row) => row.user_id as string),
       ])
     );
 
@@ -150,26 +213,26 @@ export async function GET(request: NextRequest) {
       }, {});
     }
 
-    const wallets = (walletRows || []).map((row) => ({
+    const wallets = walletRows.map((row) => ({
       user_id: row.user_id,
-      wallet_key: row.wallet_key || 'festa_magica',
+      wallet_key: row.wallet_key,
       email: usersById[row.user_id as string]?.email || '',
       name: usersById[row.user_id as string]?.name || '',
-      balance: Number(row.balance || 0),
-      lifetime_earned: Number(row.lifetime_earned || 0),
-      lifetime_spent: Number(row.lifetime_spent || 0),
+      balance: Number(row.balance),
+      lifetime_earned: Number(row.lifetime_earned),
+      lifetime_spent: Number(row.lifetime_spent),
       updated_at: row.updated_at,
     }));
 
-    const ledger = (ledgerRows || []).map((row) => ({
+    const ledger = ledgerRows.map((row) => ({
       id: row.id,
       user_id: row.user_id,
-      wallet_key: row.wallet_key || 'festa_magica',
+      wallet_key: row.wallet_key,
       email: usersById[row.user_id as string]?.email || '',
       name: usersById[row.user_id as string]?.name || '',
-      amount: Number(row.amount || 0),
+      amount: Number(row.amount),
       entry_type: row.entry_type,
-      source: row.source || row.reason || '',
+      source: row.source || '',
       reference_id: row.reference_id,
       created_at: row.created_at,
     }));
