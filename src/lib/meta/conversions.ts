@@ -3,7 +3,13 @@ import { createHash } from 'node:crypto';
 interface MetaStartTrialParams {
   userId: string;
   email: string;
-  source: 'hub_signup';
+  source: 'wallet_created';
+}
+
+export type MetaProductId = 'festa-magica' | 'car-studio';
+
+interface MetaStartTrialForProductParams extends MetaStartTrialParams {
+  productId: MetaProductId;
 }
 
 function sha256(value: string): string {
@@ -14,10 +20,19 @@ function normalizeEmail(email: string): string {
   return String(email || '').trim().toLowerCase();
 }
 
-function getMetaConfig() {
-  const pixelId = String(process.env.META_PIXEL_ID || process.env.NEXT_PUBLIC_META_PIXEL_ID || '').trim();
-  const accessToken = String(process.env.META_ACCESS_TOKEN || '').trim();
-  const testEventCode = String(process.env.META_TEST_EVENT_CODE || '').trim();
+function getMetaConfig(productId: MetaProductId) {
+  const isCarStudio = productId === 'car-studio';
+  const pixelId = String(
+    isCarStudio
+      ? process.env.META_CAR_STUDIO_PIXEL_ID || ''
+      : process.env.META_PIXEL_ID || process.env.NEXT_PUBLIC_META_PIXEL_ID || ''
+  ).trim();
+  const accessToken = String(
+    isCarStudio ? process.env.META_CAR_STUDIO_ACCESS_TOKEN || '' : process.env.META_ACCESS_TOKEN || ''
+  ).trim();
+  const testEventCode = String(
+    isCarStudio ? process.env.META_CAR_STUDIO_TEST_EVENT_CODE || '' : process.env.META_TEST_EVENT_CODE || ''
+  ).trim();
 
   if (!pixelId || !accessToken) {
     return null;
@@ -30,8 +45,10 @@ function getMetaConfig() {
   };
 }
 
-export async function sendMetaStartTrialForAccountCreated(params: MetaStartTrialParams): Promise<void> {
-  const config = getMetaConfig();
+export async function sendMetaStartTrialForProductAccountCreated(
+  params: MetaStartTrialForProductParams
+): Promise<void> {
+  const config = getMetaConfig(params.productId);
   if (!config) return;
 
   const normalizedEmail = normalizeEmail(params.email);
@@ -53,7 +70,7 @@ export async function sendMetaStartTrialForAccountCreated(params: MetaStartTrial
         },
         custom_data: {
           source: params.source,
-          product: 'festa-magica',
+          product: params.productId,
           account_created: true,
         },
       },

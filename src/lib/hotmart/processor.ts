@@ -379,6 +379,7 @@ export async function processHotmartWebhookEvent(payload: HotmartWebhookPayload)
           hotmartProductName
         )
       : await grantAccessToUser(hubUser.id, creditConfig.productId, transaction, eventId, eventName);
+
     return { accepted: true, status: 'processed', grantCreated };
   }
 
