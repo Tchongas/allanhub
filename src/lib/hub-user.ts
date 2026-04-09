@@ -1,5 +1,6 @@
 import type { User as SupabaseAuthUser } from '@supabase/supabase-js';
 import { createServiceRoleClient } from '@/lib/supabase/server';
+import { sendMetaStartTrialForAccountCreated } from '@/lib/meta/conversions';
 
 export interface HubUserRow {
   id: string;
@@ -131,6 +132,19 @@ export async function ensureHubUserForAuthUser(authUser: SupabaseAuthUser): Prom
 
   if (createError || !created) {
     throw new Error(`Failed to create hub user: ${createError?.message || 'unknown error'}`);
+  }
+
+  try {
+    await sendMetaStartTrialForAccountCreated({
+      userId: created.id,
+      email: created.email,
+      source: 'hub_signup',
+    });
+  } catch (trackingError) {
+    console.warn('meta_start_trial_tracking_failed', {
+      user_id: created.id,
+      message: trackingError instanceof Error ? trackingError.message : 'unknown tracking error',
+    });
   }
 
   return created as HubUserRow;
