@@ -33,6 +33,7 @@ export default function LoginContent() {
   const searchParams = useSearchParams();
   const [isLoadingGoogle, setIsLoadingGoogle] = useState(false);
   const [isSubmittingEmail, setIsSubmittingEmail] = useState(false);
+  const [isSendingReset, setIsSendingReset] = useState(false);
   const [mode, setMode] = useState<'login' | 'register'>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -41,8 +42,9 @@ export default function LoginContent() {
   const [emailError, setEmailError] = useState<string | null>(null);
 
   const error = searchParams.get('error');
+  const reset = searchParams.get('reset');
   const redirectTo = searchParams.get('redirect_to');
-  const isBusy = isLoadingGoogle || isSubmittingEmail;
+  const isBusy = isLoadingGoogle || isSubmittingEmail || isSendingReset;
 
   const handleGoogleLogin = () => {
     setIsLoadingGoogle(true);
@@ -50,6 +52,38 @@ export default function LoginContent() {
       ? `/api/auth/google?redirect_to=${encodeURIComponent(redirectTo)}`
       : '/api/auth/google';
     window.location.href = url;
+  };
+
+  const handleForgotPassword = async () => {
+    setEmailError(null);
+    setMessage(null);
+
+    const normalizedEmail = email.trim().toLowerCase();
+    if (!normalizedEmail) {
+      setEmailError('Informe seu email para receber o link de redefinição.');
+      return;
+    }
+
+    setIsSendingReset(true);
+    try {
+      const res = await fetch('/api/auth/forgot-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: normalizedEmail }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        setEmailError(data.error || 'Não foi possível enviar o link de redefinição.');
+        return;
+      }
+
+      setMessage(data.message || 'Se o email existir, você receberá um link de redefinição.');
+    } catch {
+      setEmailError('Não foi possível enviar o link de redefinição. Tente novamente.');
+    } finally {
+      setIsSendingReset(false);
+    }
   };
 
   const handleEmailSubmit = async (e: React.FormEvent) => {
@@ -111,6 +145,9 @@ export default function LoginContent() {
           ? 'Erro ao fazer login. Tente novamente.'
           : null;
 
+  const topMessage =
+    reset === 'success' ? 'Senha redefinida com sucesso. Faça login com sua nova senha.' : null;
+
   return (
     <div className="min-h-screen bg-slate-900 flex items-center justify-center p-6">
       <Card className="w-full max-w-md">
@@ -127,6 +164,12 @@ export default function LoginContent() {
           {topError && (
             <div className="mb-4 bg-red-900/50 text-red-400 text-sm p-3 rounded-lg border border-red-800">
               {topError}
+            </div>
+          )}
+
+          {topMessage && (
+            <div className="mb-4 bg-emerald-900/30 border border-emerald-700 text-emerald-300 text-sm rounded-lg px-3 py-2">
+              {topMessage}
             </div>
           )}
 
@@ -219,6 +262,18 @@ export default function LoginContent() {
                   required
                 />
               </div>
+              {mode === 'login' && (
+                <div className="mt-2 text-right">
+                  <button
+                    type="button"
+                    onClick={handleForgotPassword}
+                    disabled={isBusy}
+                    className="text-xs text-blue-300 hover:text-blue-200 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {isSendingReset ? 'Enviando link...' : 'Esqueci minha senha'}
+                  </button>
+                </div>
+              )}
             </div>
 
             <div>
