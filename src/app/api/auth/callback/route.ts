@@ -6,6 +6,7 @@ import { ensureHubUserForAuthUser } from '@/lib/hub-user';
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get('code');
+  const nextPath = requestUrl.searchParams.get('next');
   const origin = requestUrl.origin;
 
   console.info('hub_oauth_callback_hit', {
@@ -48,6 +49,14 @@ export async function GET(request: NextRequest) {
           });
           return NextResponse.redirect(`${origin}${redirectTo}`);
         }
+      }
+
+      if (nextPath && nextPath.startsWith('/')) {
+        console.info('hub_oauth_callback_redirect', {
+          target: `${origin}${nextPath}`,
+          source: 'next_query_param',
+        });
+        return NextResponse.redirect(`${origin}${nextPath}`);
       }
 
       console.info('hub_oauth_callback_redirect', {

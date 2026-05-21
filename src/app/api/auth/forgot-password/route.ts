@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
     }
 
     const supabase = await createSupabaseServer();
-    const redirectTo = `${new URL(request.url).origin}/reset-password`;
+    const redirectTo = `${new URL(request.url).origin}/api/auth/callback?next=/reset-password`;
 
     await supabase.auth.resetPasswordForEmail(normalizedEmail, { redirectTo });
 
@@ -32,3 +32,4 @@ export async function POST(request: NextRequest) {
 export async function GET() {
   return NextResponse.redirect('/login');
 }
+
