@@ -1,3 +1,10 @@
+/**
+ * Inicia o login OAuth com Google.
+ *
+ * Aceita `redirect_to` relativo (ex: `/code/ABC-123` ou `/api/auth/festa-magica/start?...`),
+ * armazena em cookie `auth_redirect_to` e redireciona para o Supabase Auth.
+ * O callback do OAuth é sempre `/api/auth/callback`.
+ */
 import { NextRequest, NextResponse } from 'next/server';
 import { createSupabaseServer } from '@/lib/supabase/server';
 import { cookies } from 'next/headers';
@@ -7,7 +14,6 @@ export async function GET(request: NextRequest) {
   const origin = request.nextUrl.origin;
   const callbackUrl = `${origin}/api/auth/callback`;
 
-  // Store redirect_to in a cookie so we can use it after OAuth callback
   const redirectTo = request.nextUrl.searchParams.get('redirect_to');
   if (redirectTo) {
     const cookieStore = await cookies();

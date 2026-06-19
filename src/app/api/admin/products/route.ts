@@ -1,3 +1,9 @@
+/**
+ * CRUD de produtos no painel admin.
+ *
+ * Todas as operações exigem usuário autenticado com email em `src/lib/admin.ts`.
+ * GET lista produtos; POST/PUT/DELETE manipulam a tabela `products`.
+ */
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { createServiceRoleClient } from '@/lib/supabase/server';
@@ -26,7 +32,6 @@ async function verifyAdmin(request: NextRequest) {
   return { user };
 }
 
-// GET - List all products
 export async function GET(request: NextRequest) {
   try {
     const auth = await verifyAdmin(request);
@@ -42,7 +47,6 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST - Create new product
 export async function POST(request: NextRequest) {
   try {
     const auth = await verifyAdmin(request);
@@ -102,7 +106,6 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// PUT - Update product
 export async function PUT(request: NextRequest) {
   try {
     const auth = await verifyAdmin(request);
@@ -125,7 +128,6 @@ export async function PUT(request: NextRequest) {
   }
 }
 
-// DELETE - Delete product
 export async function DELETE(request: NextRequest) {
   try {
     const auth = await verifyAdmin(request);

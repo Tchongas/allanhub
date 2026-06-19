@@ -1,5 +1,11 @@
 "use client";
 
+/**
+ * Modal de perfil do usuário.
+ *
+ * Mostra dados básicos, produtos ativos e botão de logout. Aberto ao clicar
+ * no header quando o usuário está autenticado.
+ */
 import { X, Mail, Calendar, Package, LogOut, Infinity } from 'lucide-react';
 import { Button } from '@/components/ui';
 import { User as UserType, UserProduct } from '@/types';

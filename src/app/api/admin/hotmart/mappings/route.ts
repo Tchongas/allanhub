@@ -1,3 +1,10 @@
+/**
+ * Mapeamento Hotmart `product.ucode` -> produto do Hub.
+ *
+ * Cada mapeamento define o `grant_mode`: `access` (libera `user_products`) ou
+ * `credits` (adiciona créditos via `grant_credits`). Quando o modo é créditos,
+ * o produto precisa estar registrado em `src/lib/credits/catalog.ts`.
+ */
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { createServiceRoleClient } from '@/lib/supabase/server';

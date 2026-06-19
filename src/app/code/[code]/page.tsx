@@ -1,20 +1,28 @@
 "use client";
 
+/**
+ * Página de ativação por URL: `/code/<CODIGO>`.
+ *
+ * Verifica se o usuário está logado; se sim, ativa o código automaticamente.
+ * Se não estiver logado, exibe botão de login que retorna para a mesma URL.
+ * Estados possíveis: loading, not_logged_in, activating, success, already_owned,
+ * already_used, invalid, error.
+ */
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { CheckCircle, X, XCircle, Loader2, LogIn, KeyRound, Sparkles, ArrowRight, Home } from 'lucide-react';
 import { Button, Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui';
 
-type ActivationState = 
-  | 'loading'        // checking auth + validating code
-  | 'not_logged_in'  // user not logged in, prompt to login
-  | 'activating'     // currently activating
-  | 'success'        // code activated successfully
-  | 'already_owned'  // user already has this product active
-  | 'already_used'   // code was already used
-  | 'invalid'        // code is invalid or expired
-  | 'error';         // generic error
+type ActivationState =
+  | 'loading'
+  | 'not_logged_in'
+  | 'activating'
+  | 'success'
+  | 'already_owned'
+  | 'already_used'
+  | 'invalid'
+  | 'error';
 
 interface ProductInfo {
   id: string;
@@ -56,20 +64,16 @@ export default function CodeActivationPage() {
     }
   }, [state, product?.id, router]);
 
-  // Step 1: Check if user is logged in and validate the code
   useEffect(() => {
     async function checkAuthAndCode() {
       try {
-        // Check auth status
         const authRes = await fetch('/api/auth/verify');
         const authData = await authRes.json();
 
         if (authData.authenticated) {
-          // User is logged in — try to activate immediately
           setState('activating');
           await activateCode();
         } else {
-          // User is not logged in — show login prompt
           setState('not_logged_in');
         }
       } catch {
@@ -96,10 +100,8 @@ export default function CodeActivationPage() {
         setProduct(data.product);
         setState('success');
       } else if (response.status === 401) {
-        // Session expired or invalid — prompt login
         setState('not_logged_in');
       } else if (response.status === 409 && data.error === 'already_owned') {
-        // User already has this product active
         setProduct(data.product);
         setState('already_owned');
       } else {

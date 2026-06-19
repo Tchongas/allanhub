@@ -1,3 +1,12 @@
+/**
+ * Acesso direto ao banco via service role.
+ *
+ * Contém operações de leitura/escrita em `hub_users`, `user_products`,
+ * `activation_codes` e geração de códigos de ativação.
+ *
+ * Todas as funções usam `createServiceRoleClient` e devem ser chamadas
+ * apenas de API routes ou Server Components confiáveis.
+ */
 import { createServiceRoleClient } from './server';
 import { User, UserProduct, ActivationCode, Product } from '@/types';
 

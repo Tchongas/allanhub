@@ -1,3 +1,10 @@
+/**
+ * Webhook de eventos de compra do Hotmart.
+ *
+ * Valida o token `HOTMART_HOTTOK`, persiste o evento em `hotmart_webhook_events`
+ * e delega o processamento para `src/lib/hotmart/processor`. Também limpa eventos
+ * antigos periodicamente para evitar crescimento excessivo da tabela.
+ */
 import { NextRequest, NextResponse } from 'next/server';
 import { createServiceRoleClient } from '@/lib/supabase/server';
 import { processHotmartWebhookEvent } from '@/lib/hotmart/processor';

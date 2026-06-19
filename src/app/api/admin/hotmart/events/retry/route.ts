@@ -1,3 +1,9 @@
+/**
+ * Reprocessamento manual de eventos Hotmart.
+ *
+ * Permite ao admin re-executar o processador sobre um evento falho
+ * diretamente pelo painel. Eventos com `hottok_valid=false` não são reprocessados.
+ */
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { createServiceRoleClient } from '@/lib/supabase/server';

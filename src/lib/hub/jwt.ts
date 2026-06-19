@@ -1,3 +1,11 @@
+/**
+ * Geração de tokens de handoff para produtos integrados (Festa Mágica, Car Studio).
+ *
+ * O token assinado com HS256 é passado na query `token` para o callback do produto,
+ * que valida com o mesmo `HUB_JWT_SECRET` e cria a sessão local do usuário.
+ *
+ * Claims: sub, email, name, product, nonce. Expira em 5 minutos.
+ */
 import { JWTPayload, SignJWT } from 'jose';
 
 export interface HubTokenPayload {

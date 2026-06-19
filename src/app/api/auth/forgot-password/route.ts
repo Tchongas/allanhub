@@ -1,3 +1,9 @@
+/**
+ * Envia email de redefinição de senha.
+ *
+ * Redireciona o usuário de volta para `/api/auth/callback?next=/reset-password`
+ * após confirmar o link. Retorna mensagem genérica para evitar enumeração de emails.
+ */
 import { NextRequest, NextResponse } from 'next/server';
 import { createSupabaseServer } from '@/lib/supabase/server';
 

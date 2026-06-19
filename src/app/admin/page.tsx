@@ -1,5 +1,12 @@
 "use client";
 
+/**
+ * Painel administrativo do Hub.
+ *
+ * Abas: Produtos, Banners, Usuários e Hotmart.
+ * Todas as abas consomem APIs em `/api/admin/*` e protegem ações por sessão
+ * e email de admin definido em `src/lib/admin.ts`.
+ */
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { 
@@ -158,7 +165,6 @@ export default function AdminPage() {
   const [expandedUsers, setExpandedUsers] = useState<Record<string, boolean>>({});
   const [usersPagination, setUsersPagination] = useState<UsersPagination>(DEFAULT_USERS_PAGINATION);
 
-  // Hotmart state
   const [hotmartMappings, setHotmartMappings] = useState<HotmartMapping[]>([]);
   const [hotmartEvents, setHotmartEvents] = useState<HotmartEvent[]>([]);
   const [creditWallets, setCreditWallets] = useState<CreditWallet[]>([]);
@@ -206,7 +212,6 @@ export default function AdminPage() {
     };
   }
 
-  // Banner state
   const [allBanners, setAllBanners] = useState<Banner[]>([]);
   const [bannersLoading, setBannersLoading] = useState(false);
   const [editingBanner, setEditingBanner] = useState<Banner | null>(null);
@@ -357,7 +362,6 @@ export default function AdminPage() {
       const data = await res.json();
       setProducts(data.products || []);
       
-      // Load codes for each product
       for (const product of data.products || []) {
         await loadCodesForProduct(product.id);
       }
@@ -598,7 +602,6 @@ export default function AdminPage() {
     }
   }
 
-  // Banner functions
   async function loadBanners() {
     setBannersLoading(true);
     try {
@@ -937,7 +940,6 @@ export default function AdminPage() {
               </Button>
             )}
           </div>
-          {/* Tabs */}
           <div className="flex gap-1">
             <button
               onClick={() => setActiveTab('products')}
@@ -1080,7 +1082,6 @@ export default function AdminPage() {
               </div>
             </div>
 
-            {/* Modal HTML Section */}
             <div className="mb-4">
               <div className="flex items-center justify-between mb-1">
                 <label className="block text-sm font-medium text-slate-400 flex items-center gap-2">
@@ -1129,7 +1130,6 @@ export default function AdminPage() {
               </p>
             </div>
 
-            {/* Public Welcome Page Section */}
             <div className="mb-4 border border-slate-700/70 rounded-lg p-4 bg-slate-900/30">
               <div className="flex items-center justify-between mb-1">
                 <label className="block text-sm font-medium text-slate-300 flex items-center gap-2">
@@ -1335,7 +1335,6 @@ export default function AdminPage() {
                     <span>{product.features.length} recursos</span>
                   </div>
 
-                  {/* Activation Codes Section */}
                   <div className="mt-4 pt-4 border-t border-slate-700/50">
                     <button
                       onClick={() => toggleCodes(product.id)}
@@ -1415,7 +1414,6 @@ export default function AdminPage() {
 
         {activeTab === 'banners' && (
           <div>
-            {/* Banner Form */}
             {(isCreatingBanner || editingBanner) && (
               <div className="mb-8 bg-slate-800/50 border border-slate-700 rounded-xl p-6">
                 <h2 className="text-lg font-semibold text-white mb-6">
@@ -1491,7 +1489,6 @@ export default function AdminPage() {
                   </div>
                 </div>
 
-                {/* HTML overlay */}
                 <div className="mb-4">
                   <div className="flex items-center justify-between mb-1">
                     <label className="block text-sm font-medium text-slate-400 flex items-center gap-2">
@@ -1538,7 +1535,6 @@ export default function AdminPage() {
                   </label>
                 </div>
 
-                {/* Image preview */}
                 {bannerForm.image_url && (
                   <div className="mb-6">
                     <p className="text-xs text-slate-500 mb-2">Pré-visualização da imagem:</p>
@@ -1573,7 +1569,6 @@ export default function AdminPage() {
               </div>
             )}
 
-            {/* Banner list */}
             {bannersLoading ? (
               <div className="flex items-center justify-center py-16">
                 <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
@@ -1590,7 +1585,6 @@ export default function AdminPage() {
                     className="bg-slate-800/50 border border-slate-700 rounded-xl overflow-hidden"
                   >
                     <div className="flex flex-col sm:flex-row">
-                      {/* Thumbnail */}
                       <div className="sm:w-64 h-32 sm:h-auto bg-slate-900/50 flex-shrink-0 overflow-hidden">
                         <img
                           src={banner.image_url}
@@ -1601,7 +1595,6 @@ export default function AdminPage() {
                           }}
                         />
                       </div>
-                      {/* Info */}
                       <div className="flex-1 p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-1.5">
@@ -1649,7 +1642,6 @@ export default function AdminPage() {
               </div>
             )}
 
-            {/* Refresh button */}
             <div className="mt-6 flex justify-center">
               <Button variant="ghost" onClick={loadBanners} disabled={bannersLoading}>
                 <RefreshCw className={`w-4 h-4 ${bannersLoading ? 'animate-spin' : ''}`} /> Atualizar lista
@@ -1660,7 +1652,6 @@ export default function AdminPage() {
 
         {activeTab === 'users' && (
           <div>
-            {/* Search bar */}
             <div className="mb-6">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
@@ -1774,7 +1765,6 @@ export default function AdminPage() {
               </div>
             )}
 
-            {/* Refresh button */}
             <div className="mt-6 flex justify-center">
               <Button variant="ghost" onClick={() => loadUsers(usersPagination.page)} disabled={usersLoading}>
                 <RefreshCw className={`w-4 h-4 ${usersLoading ? 'animate-spin' : ''}`} /> Atualizar lista

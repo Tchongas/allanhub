@@ -1,3 +1,12 @@
+/**
+ * Callback do OAuth do Supabase (Google) e redirecionamento pós-login.
+ *
+ * Troca o `code` por sessão, sincroniza o usuário em `hub_users`,
+ * grava o cookie `hub_session` e redireciona para:
+ * - `auth_redirect_to` cookie (se existir e for relativo);
+ * - `next` query param (se existir e for relativo);
+ * - ou `/` como padrão.
+ */
 import { NextRequest, NextResponse } from 'next/server';
 import { createSupabaseServer } from '@/lib/supabase/server';
 import { cookies } from 'next/headers';

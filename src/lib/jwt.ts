@@ -1,3 +1,12 @@
+/**
+ * Geração de tokens de produto (fluxo legado via `/api/products/redirect`).
+ *
+ * Usado para redirecionamentos gerais de produtos. Para o handoff específico
+ * do Festa Mágica, prefira `src/lib/hub/jwt.ts`.
+ *
+ * Secret: lê `HUB_JWT_SECRET`, `JWT_SECRET` ou `SUPABASE_JWT_SECRET` (fallback).
+ * Expiração: 5 minutos.
+ */
 import { SignJWT, JWTPayload } from 'jose';
 
 function getJwtSecret(): Uint8Array {

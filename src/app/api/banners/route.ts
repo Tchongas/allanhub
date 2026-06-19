@@ -1,3 +1,8 @@
+/**
+ * Retorna banners ativos para o carrossel da home.
+ *
+ * Leitura pública, sem autenticação. Usa cache de 1 minuto.
+ */
 import { NextResponse } from 'next/server';
 import { getActiveBanners } from '@/lib/banners';
 

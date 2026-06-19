@@ -1,3 +1,14 @@
+/**
+ * Validação e construção do handoff seguro Hub → Car Studio.
+ *
+ * Regras de segurança:
+ * - `product` deve ser `car-studio`.
+ * - `return_to` deve estar na allowlist (envs `CAR_STUDIO_CALLBACK_ALLOWLIST` ou fallback por `CAR_STUDIO_URL`).
+ * - `redirect_to` só é aceito se for caminho relativo.
+ * - `nonce` é obrigatório e limitado a 128 caracteres.
+ *
+ * Usado em `/api/auth/car-studio/start`.
+ */
 export const CAR_STUDIO_PRODUCT_ID = 'car-studio';
 
 const DEFAULT_CALLBACK_PATH = '/api/auth/callback';

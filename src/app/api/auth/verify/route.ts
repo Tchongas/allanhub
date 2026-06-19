@@ -1,3 +1,9 @@
+/**
+ * Verifica se o usuário está autenticado e retorna dados da sessão.
+ *
+ * Lê o cookie `hub_session`, valida no Supabase, sincroniza `hub_users`
+ * e retorna `authenticated`, `user` e lista de `user_products` ativos.
+ */
 import { NextResponse } from 'next/server';
 import { createServiceRoleClient } from '@/lib/supabase/server';
 import { getUserProducts } from '@/lib/supabase/db';

@@ -1,3 +1,13 @@
+/**
+ * Validação e construção do handoff seguro Hub → Festa Mágica.
+ *
+ * Regras de segurança:
+ * - `product` deve ser `festa-magica`.
+ * - `return_to` deve estar na allowlist (envs `FESTA_CALLBACK_ALLOWLIST` ou fallback por `FESTA_MAGICA_URL`).
+ * - `redirect_to` só é aceito se for caminho relativo (evita open redirect).
+ *
+ * Usado em `/api/auth/festa-magica/start`.
+ */
 export const FESTA_PRODUCT_ID = 'festa-magica';
 
 const DEFAULT_CALLBACK_PATH = '/api/auth/callback';

@@ -1,5 +1,11 @@
 "use client";
 
+/**
+ * Carrossel de banners da home.
+ *
+ * Navegação manual, autoplay a cada 25s (respeita `prefers-reduced-motion`),
+ * suporte a swipe em mobile e pausa ao passar o mouse.
+ */
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Banner } from '@/types';
@@ -44,12 +50,10 @@ export function BannerCarousel({ banners }: BannerCarouselProps) {
       return () => media.removeEventListener('change', update);
     }
 
-    // Safari
     media.addListener(update);
     return () => media.removeListener(update);
   }, []);
 
-  // Auto-advance every 25s unless hovered or reduced-motion
   useEffect(() => {
     if (count <= 1) return;
     if (isHovered) return;
@@ -62,7 +66,6 @@ export function BannerCarousel({ banners }: BannerCarouselProps) {
     };
   }, [next, count, isHovered, prefersReducedMotion, autoplayEnabled]);
 
-  // Touch handlers for mobile swipe
   const handleTouchStart = (e: React.TouchEvent) => {
     disableAutoplay();
     touchStartX.current = e.touches[0].clientX;
@@ -110,7 +113,6 @@ export function BannerCarousel({ banners }: BannerCarouselProps) {
       onTouchEnd={handleTouchEnd}
       onKeyDown={handleKeyDown}
     >
-      {/* Banner slide */}
       <div className="block relative w-full aspect-[4/3] sm:aspect-[21/7] bg-slate-800/50 overflow-hidden">
         {banner.link_url && (
           <a
@@ -121,7 +123,6 @@ export function BannerCarousel({ banners }: BannerCarouselProps) {
             aria-label={banner.title}
           />
         )}
-        {/* Desktop image */}
         <img
           src={banner.image_url}
           alt={banner.title}
@@ -130,7 +131,6 @@ export function BannerCarousel({ banners }: BannerCarouselProps) {
           }`}
           draggable={false}
         />
-        {/* Mobile image (if provided) */}
         {banner.image_mobile_url && (
           <img
             src={banner.image_mobile_url}
@@ -140,7 +140,6 @@ export function BannerCarousel({ banners }: BannerCarouselProps) {
           />
         )}
 
-        {/* Optional HTML overlay */}
         {banner.html_content && (
           <div className="absolute inset-0 flex items-center justify-center p-4 sm:p-8">
             <div
@@ -151,7 +150,6 @@ export function BannerCarousel({ banners }: BannerCarouselProps) {
         )}
       </div>
 
-      {/* Navigation arrows (desktop, hidden on single banner) */}
       {count > 1 && (
         <>
           <button
@@ -177,7 +175,6 @@ export function BannerCarousel({ banners }: BannerCarouselProps) {
         </>
       )}
 
-      {/* Dots indicator */}
       {count > 1 && (
         <div className="absolute z-20 bottom-2 sm:bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5">
           {banners.map((_, i) => (

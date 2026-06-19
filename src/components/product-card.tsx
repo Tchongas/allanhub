@@ -1,5 +1,11 @@
 "use client";
 
+/**
+ * Card de produto na home do Hub.
+ *
+ * Exibe informações do produto, campos de ativação de código e botão de acesso.
+ * Se o produto tiver `modal_html`, abre o modal de introdução ao clicar em acessar.
+ */
 import { useState } from 'react';
 import { PartyPopper, Rocket, Sparkles, Check, ExternalLink, Loader2, Clock, Infinity, LogIn, ShoppingCart } from 'lucide-react';
 import { Button, Input, Badge } from '@/components/ui';

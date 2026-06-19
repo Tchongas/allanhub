@@ -1,3 +1,8 @@
+/**
+ * Home do Hub.
+ *
+ * Apenas envolve `home-content.tsx` em Suspense porque ele usa `useSearchParams`.
+ */
 import { Suspense } from 'react';
 import HomeContent from './home-content';
 

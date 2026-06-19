@@ -1,3 +1,9 @@
+/**
+ * Root layout do Hub.
+ *
+ * Carrega fontes Geist, define metadados e injeta o Meta Pixel
+ * quando `NEXT_PUBLIC_META_PIXEL_ID` está configurado.
+ */
 import type { Metadata } from "next";
 import Script from "next/script";
 import { Geist, Geist_Mono } from "next/font/google";

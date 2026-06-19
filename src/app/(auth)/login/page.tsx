@@ -1,3 +1,8 @@
+/**
+ * Página de login.
+ *
+ * Envolve `login-content.tsx` em Suspense devido ao uso de `useSearchParams`.
+ */
 import { Suspense } from 'react';
 import LoginContent from './login-content';
 

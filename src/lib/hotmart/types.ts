@@ -1,3 +1,9 @@
+/**
+ * Tipos do payload de webhook e resultado do processamento Hotmart.
+ *
+ * Estrutura básica do payload recebido no header `X-HOTMART-HOTTOK`.
+ * Campos são opcionais porque o webhook pode enviar formatos variados.
+ */
 export type HotmartPurchaseEventName =
   | 'PURCHASE_APPROVED'
   | 'PURCHASE_COMPLETE'

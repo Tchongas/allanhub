@@ -1,5 +1,11 @@
 "use client";
 
+/**
+ * Tela de login do Hub.
+ *
+ * Suporta login com Google OAuth e email/senha. Também permite alternar
+ * para cadastro e enviar link de redefinição de senha. Respeita `redirect_to`.
+ */
 import { useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';

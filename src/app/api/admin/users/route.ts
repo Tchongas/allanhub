@@ -1,3 +1,9 @@
+/**
+ * Listagem paginada de usuários para o painel admin.
+ *
+ * Retorna usuários de `hub_users` com seus produtos ativos/expirados/cancelados.
+ * Útil para suporte e auditoria de acessos.
+ */
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { createServiceRoleClient } from '@/lib/supabase/server';
@@ -39,7 +45,6 @@ export async function GET(request: NextRequest) {
     const from = (page - 1) * limit;
     const to = from + limit - 1;
 
-    // Fetch users page
     const { data: users, error: usersError, count } = await supabase
       .from('hub_users')
       .select('id, email, name, created_at', { count: 'exact' })
@@ -68,7 +73,6 @@ export async function GET(request: NextRequest) {
       userProducts = pageUserProducts || [];
     }
 
-    // Fetch all products for name mapping
     const { data: products, error: prodError } = await supabase
       .from('products')
       .select('id, name');
@@ -77,13 +81,11 @@ export async function GET(request: NextRequest) {
       throw new Error(`Failed to fetch products: ${prodError.message}`);
     }
 
-    // Build product name map
     const productNameMap: Record<string, string> = {};
     for (const p of products || []) {
       productNameMap[p.id] = p.name;
     }
 
-    // Group user products by user_id
     const userProductsMap: Record<string, any[]> = {};
     for (const up of userProducts || []) {
       if (!userProductsMap[up.user_id]) {
@@ -95,7 +97,6 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // Combine users with their products
     const usersWithProducts = userRows.map((user: any) => ({
       id: user.id,
       email: user.email,

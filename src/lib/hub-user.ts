@@ -1,3 +1,12 @@
+/**
+ * Sincronização de usuários entre Supabase Auth e a tabela `hub_users`.
+ *
+ * Todo login (Google ou email/senha) passa por `ensureHubUserForAuthUser`,
+ * que garante que exista um registro em `hub_users` com email normalizado.
+ *
+ * A canonicalização é feita por email para evitar duplicatas quando o mesmo
+ * email é usado por provedores diferentes.
+ */
 import type { User as SupabaseAuthUser } from '@supabase/supabase-js';
 import { createServiceRoleClient } from '@/lib/supabase/server';
 
@@ -35,7 +44,6 @@ export async function ensureHubUserForAuthUser(authUser: SupabaseAuthUser): Prom
 
   const desiredName = getDefaultName(authUser);
 
-  // 1) Canonicalize by normalized email first to avoid duplicates across providers
   const { data: byEmailRows, error: byEmailError } = await supabase
     .from('hub_users')
     .select('*')
@@ -77,7 +85,6 @@ export async function ensureHubUserForAuthUser(authUser: SupabaseAuthUser): Prom
     return canonical;
   }
 
-  // 2) Fallback by exact auth id for legacy rows that still have a different email
   const { data: byIdRows, error: byIdError } = await supabase
     .from('hub_users')
     .select('*')
@@ -118,7 +125,6 @@ export async function ensureHubUserForAuthUser(authUser: SupabaseAuthUser): Prom
     return existing;
   }
 
-  // 3) Create if it doesn't exist yet
   const { data: created, error: createError } = await supabase
     .from('hub_users')
     .insert({

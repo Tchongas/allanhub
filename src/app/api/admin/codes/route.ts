@@ -1,3 +1,9 @@
+/**
+ * Geração e listagem de códigos de ativação no painel admin.
+ *
+ * GET retorna os 5 últimos códigos de um produto; POST gera até 10 novos códigos.
+ * Usado na aba "Produtos" do admin para copiar e distribuir códigos manualmente.
+ */
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { createServiceRoleClient } from '@/lib/supabase/server';

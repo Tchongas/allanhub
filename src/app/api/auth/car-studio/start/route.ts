@@ -1,3 +1,10 @@
+/**
+ * Handoff seguro Hub → Car Studio.
+ *
+ * Entrada: `GET /api/auth/car-studio/start?product=car-studio&return_to=<callback>&redirect_to=<caminho>&nonce=<nonce>`
+ * Valida acesso, autenticação e parâmetros; redireciona para o callback do Car Studio
+ * com token JWT assinado. Se não houver sessão, redireciona para login Google.
+ */
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { createServiceRoleClient } from '@/lib/supabase/server';

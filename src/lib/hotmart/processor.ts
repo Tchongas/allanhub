@@ -1,3 +1,13 @@
+/**
+ * Processamento de eventos de compra do Hotmart.
+ *
+ * Converte eventos de compra em acessos ou créditos no Hub:
+ * - Mapeia `product.ucode` para `products.id` via `hotmart_product_mappings`.
+ * - Cria/atualiza o usuário em `hub_users` pelo email do comprador.
+ * - Concede acesso (`user_products`) ou créditos conforme `grant_mode`.
+ * - Revoga acesso em cancelamentos/reembolsos/chargeback.
+ * - Registra tudo em `hotmart_grants` para auditoria e idempotência.
+ */
 import { createServiceRoleClient } from '@/lib/supabase/server';
 import { getProduct } from '@/lib/products';
 import { grantCreditsForProduct } from '@/lib/credits/grants';

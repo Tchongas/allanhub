@@ -1,3 +1,10 @@
+/**
+ * Concessão de créditos para produtos credit-based.
+ *
+ * Usa a RPC `grant_credits` no Supabase para garantir atomicidade e idempotência
+ * (via `idempotency_key`). A carteira e o ledger são determinados pelo catálogo
+ * em `src/lib/credits/catalog.ts`.
+ */
 import { createServiceRoleClient } from '@/lib/supabase/server';
 import { getCreditWalletDefinition } from './catalog';
 

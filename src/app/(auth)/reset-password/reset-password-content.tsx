@@ -1,5 +1,11 @@
 "use client";
 
+/**
+ * Tela de redefinição de senha.
+ *
+ * Valida o token/link de recuperação do Supabase (via hash ou query params)
+ * e permite ao usuário definir uma nova senha. Redireciona para login ao final.
+ */
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';

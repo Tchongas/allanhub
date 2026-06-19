@@ -1,244 +1,154 @@
-# Hub - Central de Produtos 🚀
+# Hub - Área de Membros
 
-Portal central para gerenciamento de acesso a múltiplos produtos.
+Portal central de autenticação, ativação e handoff para os produtos da Allan Fulcher (Festa Mágica, Car Studio, etc.).
 
-## Funcionalidades
+## Para administradores
 
-- 🔐 **Autenticação**: Login com Google OAuth (Supabase Auth)
-- 🎫 **Códigos de Ativação**: Usuários inserem códigos para liberar produtos
-- 📦 **Catálogo de Produtos**: Visualização de produtos disponíveis
-- 🔗 **Redirecionamento JWT**: Acesso seguro aos produtos via token
+Este README é o ponto de partida para quem precisa operar o Hub. Aqui você encontra os primeiros passos, as variáveis de ambiente obrigatórias, as funcionalidades da página `/admin` e os fluxos mais comuns de suporte.
 
-## Produtos Integrados
+## Primeiros passos
 
-| Produto | Status | Descrição |
-|---------|--------|-----------|
-| Festa Mágica | ✅ Ativo | Kits de festa infantil com IA |
-| Produto 2 | 🔜 Em breve | Placeholder |
-| Produto 3 | 🔜 Em breve | Placeholder |
-
-## Tech Stack
-
-- **Framework**: Next.js 14 (App Router)
-- **Linguagem**: TypeScript
-- **Estilização**: Tailwind CSS
-- **Banco de Dados**: Supabase (PostgreSQL)
-- **Autenticação**: Supabase Auth
-- **JWT**: jose
-
-## Início Rápido
-
-### 1. Instalar dependências
+1. Clone/entre na pasta do projeto:
 
 ```bash
 cd hub
 npm install
-```
-
-### 2. Configurar Supabase
-
-1. Crie um projeto em [supabase.com](https://supabase.com)
-2. Execute o schema SQL em `supabase/schema.sql`
-3. Copie as credenciais para `.env.local`
-
-### 3. Configurar variáveis de ambiente
-
-```bash
 cp .env.local.example .env.local
 ```
 
-Preencha:
-- `NEXT_PUBLIC_SUPABASE_URL`
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-- `NEXT_PUBLIC_SITE_URL` (URL do Hub, ex: http://localhost:3001)
-- `SUPABASE_SERVICE_ROLE_KEY`
-- `JWT_SECRET` (compatível com fluxo legado; recomendado migrar para `HUB_JWT_SECRET`)
-- `HUB_JWT_SECRET` (secret compartilhado com Festa para validação do token de handoff)
-- `FESTA_MAGICA_URL` (URL do Festa Mágica)
-- `FESTA_CALLBACK_ALLOWLIST` (lista de callbacks permitidos, separados por vírgula)
-- `CAR_STUDIO_URL` (URL base do Car Studio)
-- `CAR_STUDIO_URLS` (URLs extras do Car Studio, separadas por vírgula)
-- `CAR_STUDIO_CALLBACK_ALLOWLIST` (lista explícita de callbacks do Car Studio)
-- `HOTMART_HOTTOK` (token enviado no header `X-HOTMART-HOTTOK`)
-
-### 4. Gerar códigos de ativação
-
-No SQL Editor do Supabase:
-```sql
-SELECT * FROM generate_activation_codes('festa-magica', 10);
-```
-
-### 5. Executar em desenvolvimento
+2. Preencha `.env.local` com as credenciais (veja tabela abaixo).
+3. Configure os emails de admin em `src/lib/admin.ts`.
+4. Rode localmente:
 
 ```bash
 npm run dev
 ```
 
-Acesse: http://localhost:3001
+Acesse `http://localhost:3001`.
 
-## Estrutura do Projeto
+## Variáveis de ambiente (`.env.local`)
 
-```
-src/
-├── app/
-│   ├── (auth)/           # Login e registro
-│   ├── dashboard/        # Dashboard principal
-│   └── api/
-│       ├── auth/         # Endpoints de autenticação
-│       └── products/     # Ativação e redirecionamento
-├── components/ui/        # Componentes base
-├── lib/
-│   ├── supabase/         # Cliente Supabase
-│   ├── products.ts       # Catálogo de produtos
-│   ├── jwt.ts            # Geração de tokens
-│   └── utils.ts          # Utilitários
-├── stores/               # Zustand
-└── types/                # TypeScript interfaces
-```
+### Obrigatórias para o Hub funcionar
 
-## Fluxo de Ativação
+| Variável | O que é | Exemplo / Nota |
+|----------|---------|----------------|
+| `NEXT_PUBLIC_SUPABASE_URL` | URL do projeto Supabase | `https://xyz.supabase.co` |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Chave pública (anon) do Supabase | Começa com `eyJ...` |
+| `SUPABASE_SERVICE_ROLE_KEY` | Chave de service role | Nunca exponha no frontend. Usada nas API routes. |
+| `HUB_JWT_SECRET` | Segredo compartilhado com os produtos | Deve ser igual no `.env.local` do Festa Mágica. Mínimo 32 caracteres. |
+| `NEXT_PUBLIC_SITE_URL` | URL pública do Hub | `https://membros.seusite.com` |
+| `FESTA_MAGICA_URL` | URL do produto Festa Mágica | `https://festamagica.com` |
+| `FESTA_CALLBACK_ALLOWLIST` | Domínios permitidos para handoff | `https://festamagica.com,https://localhost:3002` |
 
-```
-1. Usuário faz login no Hub
-2. Insere código de ativação (ex: FM-XXXX-XXXX-XXXX)
-3. Sistema valida código e ativa produto
-4. Usuário clica em "Acessar"
-5. Hub gera JWT e redireciona para o produto
-6. Produto valida JWT e cria sessão local
-```
+### Opcionais / específicas por produto
 
-## API Endpoints
+| Variável | O que é | Quando usar |
+|----------|---------|-------------|
+| `CAR_STUDIO_URL` | URL base do Car Studio | Se o produto Car Studio estiver ativo. |
+| `CAR_STUDIO_URLS` | URLs extras do Car Studio | Lista separada por vírgula. |
+| `CAR_STUDIO_CALLBACK_ALLOWLIST` | Domínios permitidos para o Car Studio | Lista separada por vírgula. |
+| `HOTMART_HOTTOK` | Token do header `X-HOTMART-HOTTOK` | Obrigatório se usar webhooks da Hotmart. |
+| `NEXT_PUBLIC_META_PIXEL_ID` | ID do Meta Pixel | Tracking de marketing. |
+| `JWT_SECRET` | Segredo antigo de produto | Legado. Prefira `HUB_JWT_SECRET`. |
 
-| Endpoint | Método | Descrição |
-|----------|--------|-----------|
-| `/api/auth/google` | GET | Iniciar login com Google |
-| `/api/auth/callback` | GET | Callback do OAuth |
-| `/api/auth/festa-magica/start` | GET | Handoff OAuth + validação de acesso + redirect seguro para callback do Festa |
-| `/api/auth/car-studio/start` | GET | Handoff OAuth + redirect seguro para callback do Car Studio |
-| `/api/auth/verify` | GET | Verificar sessão |
-| `/api/auth/logout` | POST | Logout |
-| `/api/products/activate` | POST | Ativar código |
-| `/api/products/redirect` | GET | Redirecionar para produto |
-| `/api/webhooks/hotmart` | POST | Receber eventos de compra Hotmart |
-| `/api/admin/hotmart/mappings` | GET/POST/PUT/DELETE | Gerenciar mapeamento Hotmart `product.ucode` -> `products.id` |
+## Página de admin (`/admin`)
 
-## Handoff seguro Hub -> Festa Mágica
+Apenas emails listados em `src/lib/admin.ts` conseguem acessar.
 
-Entrada esperada:
+### Aba **Produtos**
 
-- `GET /api/auth/festa-magica/start?product=festa-magica&return_to=https://<FESTA_DOMAIN>/api/auth/callback&redirect_to=/criar`
+- Lista todos os produtos disponíveis na home.
+- Cria ou edita produtos:
+  - nome, slug, descrição, imagem, preço, URL do produto;
+  - `modal_html`: conteúdo exibido no modal antes de redirecionar;
+  - `welcome_html`: conteúdo exibido na primeira vez que o usuário acessa.
+- Gera códigos de ativação individualmente ou em lote.
+- Define se um produto aparece ou não para o público (`is_public`).
 
-Regras de segurança aplicadas:
+### Aba **Banners**
 
-- `product` deve ser `festa-magica`
-- `return_to` deve estar na allowlist (`FESTA_CALLBACK_ALLOWLIST` ou fallback para `FESTA_MAGICA_URL + /api/auth/callback`)
-- `redirect_to` opcional deve ser caminho relativo (nunca URL absoluta)
-- usuário precisa estar autenticado no Hub
-- usuário precisa ter acesso ativo ao produto `festa-magica`
+- Cria e edita slides do carrossel da home.
+- Campos: imagem, título, subtítulo, link, ordem e ativo/inativo.
+- Banners ativos são cacheados por 60 segundos no frontend.
 
-No sucesso:
+### Aba **Usuários**
 
-- Hub assina token HS256 (expiração de 5 minutos) e redireciona para:
-  - `{return_to}?token=<JWT>&redirect_to=/...`
+- Lista usuários cadastrados com paginação.
+- Mostra os produtos ativos de cada usuário.
+- Útil para conferir se uma compra foi ativada corretamente.
 
-Na falha:
+### Aba **Hotmart**
 
-- Hub redireciona para `/` com `?error=<codigo>&product=festa-magica`
+- **Mapeamentos**: liga cada `ucode` de produto Hotmart a um produto do Hub e define o modo (`access` ou `credits`).
+- **Eventos**: visualiza todos os webhooks recebidos, filtra por status (`processed`, `failed`, `ignored`) e reprocessa eventos falhos.
+- **Créditos**: consulta saldo de créditos e histórico de transações por usuário/produto.
 
-## Integração Hotmart (Webhook) - Scaffold
+## Fluxos de suporte comuns
 
-### Migração
+### Como um usuário ativa um produto
 
-Execute no Supabase:
+1. Usuário compra no Hotmart ou recebe um código.
+2. Faz login em `/login` com Google ou email/senha.
+3. Na home, insere o código de ativação.
+4. O sistema grava o direito em `user_products`.
 
-- `supabase/migrations/003_hotmart_webhook_scaffold.sql`
+### Como um usuário acessa o Festa Mágica
 
-Essa migração cria:
+1. Na home, clica em "Acessar Produto" no card do Festa Mágica.
+2. Se houver `modal_html`, vê o modal de introdução.
+3. O Hub redireciona para o Festa com um token JWT assinado.
+4. O Festa valida o token, cria o cookie `fm_session` e leva o usuário para `/criar`.
 
-- `hotmart_product_mappings`
-- `hotmart_webhook_events`
-- `hotmart_grants`
+### Como acompanhar uma compra Hotmart
 
-### Fluxo automático implementado
+1. Acesse `/admin` → aba **Hotmart** → **Eventos**.
+2. Procure pelo evento pela data ou email do comprador.
+3. Verifique o `processing_status`:
+   - `processed`: acesso/créditos já concedidos.
+   - `ignored`: evento não gera acesso (ex.: boleto impresso).
+   - `failed`: erro no processamento. Use o botão **Reprocessar**.
+4. Se o evento estiver `processed` mas o usuário não conseguir acessar, confira a aba **Usuários**.
 
-1. Hotmart envia evento para `/api/webhooks/hotmart`
-2. Hub valida `X-HOTMART-HOTTOK`
-3. Hub grava payload bruto em `hotmart_webhook_events` (idempotência por `hotmart_event_id`)
-4. Hub resolve o produto por `data.product.ucode` em `hotmart_product_mappings`
-5. Hub encontra/cria usuário por email do comprador (`data.buyer.email`)
-6. Hub concede ou revoga acesso no `user_products` conforme evento
+## Tabelas principais do banco (Supabase)
 
-### Eventos considerados no scaffold
+| Tabela | Propósito |
+|--------|-----------|
+| `hub_users` | Contas sincronizadas do Supabase Auth. |
+| `user_products` | Direitos ativos/expirados/cancelados por usuário e produto. |
+| `products` | Catálogo de produtos exibidos no Hub. |
+| `activation_codes` | Códigos de ativação gerados no admin. |
+| `banners` | Slides do carrossel da home. |
+| `hotmart_product_mappings` | Ligação entre `ucode` Hotmart e produto do Hub. |
+| `hotmart_webhook_events` | Todos os webhooks recebidos da Hotmart. |
+| `hotmart_grants` | Histórico de concessão/revogação de acesso/créditos. |
+| `user_credit_wallets` | Saldo de créditos por usuário. |
+| `credit_ledger` | Log de auditoria de movimentações de crédito. |
 
-- Concede acesso: `PURCHASE_APPROVED`, `PURCHASE_COMPLETE`
-- Revoga acesso: `PURCHASE_CANCELED`, `PURCHASE_REFUNDED`, `PURCHASE_CHARGEBACK`, `PURCHASE_EXPIRED`
-- Ignora (sem mudança de acesso): `PURCHASE_DELAYED`, `PURCHASE_BILLET_PRINTED`, `PURCHASE_PROTEST`
+## Segurança e boas práticas
 
-### Importante para produção
+- **Admin**: `src/lib/admin.ts` contém os emails com acesso. Altere antes de publicar em produção.
+- **Handoff**: `return_to` só aceita URLs na allowlist; `redirect_to` só aceita caminhos relativos (`/criar`).
+- **Sessão**: cookie `hub_session` é `httpOnly`, `secure` em produção e `sameSite=lax`.
+- **Hotmart**: valide sempre `HOTMART_HOTTOK` e use HTTPS em produção.
+- **Segredos**: nunca commit `.env.local`. Use `.env.local.example` como referência.
 
-- Configure mapeamentos de produto antes de ativar o webhook no Hotmart.
-- Use HTTPS e monitore a tabela `hotmart_webhook_events` para falhas.
-- Eventos desconhecidos ficam como `ignored` (não quebram o endpoint).
+## Troubleshooting rápido
 
-## Painel Admin
+| Problema | Onde olhar | Solução comum |
+|----------|-----------|---------------|
+| Usuário não consegue acessar o Festa Mágica | `/admin` → Usuários | Confirme que `user_products` tem `festa-magica` ativo. |
+| "Token inválido" no produto | `.env.local` do Hub e do Festa | Certifique-se de que `HUB_JWT_SECRET` é idêntico. |
+| Compra Hotmart não liberou acesso | `/admin` → Hotmart → Eventos | Verifique `HOTMART_HOTTOK`, mapeamentos e reprocesse se falhou. |
+| Webhook Hotmart retorna 401 | Logs do Vercel/Supabase | Confira se `HOTMART_HOTTOK` bate com o configurado no Hotmart. |
+| Banners não atualizam | Tabela `banners` | Banners são cacheados por 60s; aguarde ou verifique `is_active`. |
 
-Admins podem gerenciar produtos diretamente pelo painel web.
+## Stack e estrutura
 
-### Configurar Admins
+- **Framework**: Next.js 16 (App Router)
+- **Linguagem**: TypeScript
+- **Estilização**: Tailwind CSS v4
+- **Banco**: Supabase (PostgreSQL)
+- **Auth**: Supabase Auth
+- **JWT**: `jose` (HS256)
 
-Edite `src/lib/admin.ts` e adicione os emails dos administradores:
-
-```typescript
-const ADMIN_EMAILS: string[] = [
-  'seu-email@gmail.com',
-  'outro-admin@gmail.com',
-];
-```
-
-### Acessar Painel Admin
-
-1. Faça login com um email de admin
-2. Clique no botão "Admin" no header
-3. Gerencie produtos (criar, editar, excluir)
-
-### Funcionalidades do Admin
-
-- ✅ Criar novos produtos
-- ✅ Editar produtos existentes
-- ✅ Ativar/desativar produtos
-- ✅ Configurar acesso vitalício
-- ✅ Gerenciar recursos/features
-
-## Adicionando Novos Produtos
-
-### Via Painel Admin (Recomendado)
-
-1. Acesse `/admin` com uma conta de admin
-2. Clique em "Novo Produto"
-3. Preencha os campos e salve
-
-### Via SQL (Alternativo)
-
-```sql
-INSERT INTO products (id, name, description, icon_name, url, duration_months, is_lifetime, features, active)
-VALUES (
-  'novo-produto',
-  'Novo Produto',
-  'Descrição do produto',
-  'sparkles',
-  'https://seu-produto.vercel.app',
-  3,
-  FALSE,
-  '["Feature 1", "Feature 2"]'::jsonb,
-  TRUE
-);
-```
-
-## Acesso Vitalício
-
-Produtos podem ser configurados como vitalícios:
-
-- No painel admin, marque "Acesso Vitalício"
-- Usuários com acesso vitalício não têm data de expiração
-- Exibido como "∞ Vitalício" na interface
-
+Para detalhes de arquivos, consulte os cabeçalhos de documentação em cada módulo e a documentação em `docs/`.

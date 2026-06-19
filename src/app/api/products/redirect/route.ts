@@ -1,3 +1,10 @@
+/**
+ * Redireciona usuário autenticado para um produto com token JWT.
+ *
+ * Para `car-studio` usa o fluxo `/api/auth/car-studio/start`;
+ * para outros produtos gera token via `src/lib/jwt.ts` e redireciona
+ * para `produto/api/auth/callback?token=...`.
+ */
 import { NextRequest, NextResponse } from 'next/server';
 import { getActiveUserProduct } from '@/lib/supabase/db';
 import { getProduct } from '@/lib/products';

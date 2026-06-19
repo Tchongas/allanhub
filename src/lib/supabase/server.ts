@@ -1,3 +1,11 @@
+/**
+ * Clientes Supabase para uso no servidor (Server Components, API Routes, Server Actions).
+ *
+ * - `createSupabaseServer`: cliente SSR que lê/escreve cookies do Next.js.
+ *   Usado principalmente no fluxo OAuth do Supabase Auth.
+ * - `createServiceRoleClient`: cliente com `service_role`, sem sessão persistente.
+ *   Usado em todas as API routes que leem/escrevem no banco diretamente.
+ */
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { createClient } from '@supabase/supabase-js';
@@ -19,7 +27,7 @@ export async function createSupabaseServer() {
               cookieStore.set(name, value, options)
             );
           } catch {
-            // Server Component - ignore
+            // Ignora erros de Server Component; cookies já foram setados no middleware.
           }
         },
       },

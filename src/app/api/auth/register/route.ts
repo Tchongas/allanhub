@@ -1,3 +1,11 @@
+/**
+ * Cadastro com email/senha.
+ *
+ * Cria a conta no Supabase Auth, sincroniza em `hub_users` e retorna
+ * `requires_email_confirmation` quando a confirmação de email está ativa.
+ * Também trata o caso de anti-enumeração em que o Supabase devolve um
+ * usuário sem identidades para emails já registrados.
+ */
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { createSupabaseServer } from '@/lib/supabase/server';

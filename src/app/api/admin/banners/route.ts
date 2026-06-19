@@ -1,3 +1,9 @@
+/**
+ * CRUD de banners no painel admin.
+ *
+ * GET retorna todos os banners (ativos e inativos).
+ * POST/PUT/DELETE manipulam a tabela `banners` e limpam o cache em memória.
+ */
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { createServiceRoleClient } from '@/lib/supabase/server';
@@ -17,7 +23,6 @@ async function verifyAdmin() {
   return user;
 }
 
-// GET - List all banners (admin sees all, including inactive)
 export async function GET() {
   try {
     const user = await verifyAdmin();
@@ -33,7 +38,6 @@ export async function GET() {
   }
 }
 
-// POST - Create new banner
 export async function POST(request: NextRequest) {
   try {
     const user = await verifyAdmin();
@@ -66,7 +70,6 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// PUT - Update banner
 export async function PUT(request: NextRequest) {
   try {
     const user = await verifyAdmin();
@@ -89,7 +92,6 @@ export async function PUT(request: NextRequest) {
   }
 }
 
-// DELETE - Delete banner
 export async function DELETE(request: NextRequest) {
   try {
     const user = await verifyAdmin();

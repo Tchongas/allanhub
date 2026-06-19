@@ -1,3 +1,9 @@
+/**
+ * Lista produtos ativos para a home.
+ *
+ * Retorna todos os produtos do banco, independentemente de `active`.
+ * O filtro visual é feito no componente `home-content.tsx`.
+ */
 import { NextResponse } from 'next/server';
 import { getProductsFromDB } from '@/lib/products';
 

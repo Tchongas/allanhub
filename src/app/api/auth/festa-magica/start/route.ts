@@ -1,3 +1,10 @@
+/**
+ * Handoff seguro Hub → Festa Mágica.
+ *
+ * Entrada: `GET /api/auth/festa-magica/start?product=festa-magica&return_to=<callback>&redirect_to=<caminho>`
+ * Valida acesso, autenticação e parâmetros; redireciona para o callback do Festa
+ * com token JWT assinado. Se não houver sessão, redireciona para login Google.
+ */
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { createServiceRoleClient } from '@/lib/supabase/server';

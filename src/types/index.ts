@@ -1,3 +1,9 @@
+/**
+ * Tipos TypeScript compartilhados do Hub.
+ *
+ * Devem refletir o schema do Supabase: usuários, produtos, ativações,
+ * banners e estado de autenticação.
+ */
 export interface User {
   id: string;
   email: string;

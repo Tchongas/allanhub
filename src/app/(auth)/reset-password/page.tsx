@@ -1,3 +1,8 @@
+/**
+ * Página de redefinição de senha.
+ *
+ * Envolve `reset-password-content.tsx` em Suspense devido ao uso de `useSearchParams`.
+ */
 import { Suspense } from 'react';
 import ResetPasswordContent from './reset-password-content';
 

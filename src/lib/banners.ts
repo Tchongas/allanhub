@@ -1,9 +1,15 @@
+/**
+ * Gerenciamento de banners do carrossel da home.
+ *
+ * Mantém cache em memória de 1 minuto para reduzir chamadas ao Supabase.
+ * Apenas banners `active=true` são exibidos publicamente; admins veem todos.
+ */
 import { Banner } from '@/types';
 import { createServiceRoleClient } from '@/lib/supabase/server';
 
 let bannersCache: Banner[] | null = null;
 let cacheTimestamp: number = 0;
-const CACHE_TTL = 60000; // 1 minute
+const CACHE_TTL = 60000;
 
 export async function getActiveBanners(): Promise<Banner[]> {
   const now = Date.now();

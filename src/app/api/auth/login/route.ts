@@ -1,3 +1,9 @@
+/**
+ * Login com email/senha.
+ *
+ * Autentica via Supabase Auth, sincroniza o usuário em `hub_users`,
+ * cria o cookie `hub_session` e retorna o caminho de redirecionamento seguro.
+ */
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { createSupabaseServer } from '@/lib/supabase/server';

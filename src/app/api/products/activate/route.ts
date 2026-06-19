@@ -1,3 +1,10 @@
+/**
+ * Ativação de código de produto.
+ *
+ * Requer cookie `hub_session`. Valida o código, verifica se o usuário já
+ * possui acesso ativo e cria o `user_products` com prazo de acordo com
+ * `duration_months` ou `is_lifetime` do produto.
+ */
 import { NextRequest, NextResponse } from 'next/server';
 import { validateActivationCode, activateProduct, getActiveUserProduct } from '@/lib/supabase/db';
 import { getProduct } from '@/lib/products';
@@ -55,7 +62,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if user already owns this product
     const existingProduct = await getActiveUserProduct(hubUser.id, activationCode.product_id);
     if (existingProduct) {
       return NextResponse.json(

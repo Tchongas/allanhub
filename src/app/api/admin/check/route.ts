@@ -1,3 +1,9 @@
+/**
+ * Verifica se o usuário autenticado é administrador.
+ *
+ * Usado pelo header da home para exibir o link "Admin" e pela página `/admin`
+ * para autorizar acesso ao painel.
+ */
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { createServiceRoleClient } from '@/lib/supabase/server';

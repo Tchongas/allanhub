@@ -1,5 +1,11 @@
 "use client";
 
+/**
+ * Conteúdo da home do Hub.
+ *
+ * Carrega produtos, banners, estado de autenticação e permissão de admin.
+ * Permite buscar produtos, ativar códigos e acessar produtos já liberados.
+ */
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { AlertCircle, LogIn, Search, Settings, Sparkles, X } from 'lucide-react';
@@ -32,7 +38,6 @@ export default function HomeContent() {
   useEffect(() => {
     async function init() {
       try {
-        // Fetch products and banners in parallel
         const [productsRes, bannersRes] = await Promise.all([
           fetch('/api/products'),
           fetch('/api/banners'),
@@ -42,15 +47,12 @@ export default function HomeContent() {
         setProducts(productsData.products || []);
         setBanners(bannersData.banners || []);
 
-        // Check auth
         const authRes = await fetch('/api/auth/verify');
         const authData = await authRes.json();
         setIsLoggedIn(authData.authenticated);
         if (authData.authenticated) {
           setUser(authData.user);
           setUserProducts(authData.products || []);
-          
-          // Check admin status
           const adminRes = await fetch('/api/admin/check');
           const adminData = await adminRes.json();
           setIsAdmin(adminData.isAdmin);

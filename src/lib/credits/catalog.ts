@@ -1,3 +1,11 @@
+/**
+ * Catálogo de carteiras de crédito por produto.
+ *
+ * Produtos credit-based (ex: Festa Mágica, Car Studio) precisam estar neste
+ * registro para que o processador Hotmart e o painel admin reconheçam suas
+ * wallets e ledgers. Para adicionar um novo produto credit-based, registre-o
+ * em `CREDIT_WALLET_DEFINITIONS` e crie as tabelas correspondentes no Supabase.
+ */
 export interface CreditWalletDefinition {
   walletKey: string;
   shortCode: string;
@@ -15,8 +23,6 @@ export interface CreditNamingConvention {
   idempotencyPrefix: string;
 }
 
-// Registry for products that use credits instead of direct entitlement only.
-// Add new entries here as we launch new credit-based products.
 export const CREDIT_WALLET_DEFINITIONS: readonly CreditWalletDefinition[] = [
   {
     walletKey: 'festa_magica',

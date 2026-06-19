@@ -1,3 +1,10 @@
+/**
+ * Saldos e ledger de créditos para monitoramento admin.
+ *
+ * GET une dados das tabelas de credit wallets/ledgers do Festa Mágica e do
+ * Car Studio, normaliza e retorna os registros mais recentes. Limite padrão
+ * de 80 wallets e 120 entradas de ledger (configurável via query params).
+ */
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { createServiceRoleClient } from '@/lib/supabase/server';

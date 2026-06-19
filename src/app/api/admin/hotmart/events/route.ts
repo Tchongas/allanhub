@@ -1,3 +1,9 @@
+/**
+ * Auditoria de eventos Hotmart recebidos.
+ *
+ * GET lista os eventos de `hotmart_webhook_events` com filtro opcional por
+ * status de processamento. Útil para diagnosticar falhas de integração.
+ */
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { createServiceRoleClient } from '@/lib/supabase/server';

@@ -1,7 +1,14 @@
+/**
+ * Catálogo de produtos do Hub.
+ *
+ * Lê os produtos da tabela `products` com cache de 1 minuto em memória
+ * e expõe funções de CRUD usadas pelo painel admin e pela home.
+ *
+ * Quando o banco não responde, fallbacka para o produto Festa Mágica.
+ */
 import { Product } from '@/types';
 import { createServiceRoleClient } from '@/lib/supabase/server';
 
-// Fallback products for when DB is not available
 const FALLBACK_PRODUCTS: Product[] = [
   {
     id: 'festa-magica',
@@ -28,10 +35,9 @@ const FALLBACK_PRODUCTS: Product[] = [
   },
 ];
 
-// Cache for products
 let productsCache: Product[] | null = null;
 let cacheTimestamp: number = 0;
-const CACHE_TTL = 60000; // 1 minute
+const CACHE_TTL = 60000;
 
 export async function getProductsFromDB(): Promise<Product[]> {
   const now = Date.now();
@@ -73,7 +79,6 @@ export async function getActiveProducts(): Promise<Product[]> {
   return products.filter(p => p.active);
 }
 
-// Admin functions
 export async function createProduct(product: Omit<Product, 'created_at' | 'updated_at'>): Promise<Product> {
   const supabase = createServiceRoleClient();
   
